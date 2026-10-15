@@ -4,7 +4,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import { initiateDeveloperControlledWalletsClient } from "@circle-fin/developer-controlled-wallets";
 import { scaleTicketAbi } from "../abi";
 import { publicClient, rpcUrl } from "../chain";
-import { chain, scaleTicketAddress } from "../network";
+import { chain, networkName, scaleTicketAddress } from "../network";
 
 type ScaleTicketWrite = "release" | "logDecision" | "setPayeeCap" | "confirmBySig";
 
@@ -56,7 +56,8 @@ function circleSigner(): AgentSigner {
   const address = process.env.AGENT_ADDRESS as Address | undefined;
   if (!walletId || !address) throw new Error("AGENT_CIRCLE_WALLET_ID and AGENT_ADDRESS are required when AGENT_SIGNER=circle");
   const circle = initiateDeveloperControlledWalletsClient({
-    apiKey: process.env.CIRCLE_API_KEY!,
+    // The live key is used on mainnet; the TEST key on testnet.
+    apiKey: (networkName === "mainnet" ? process.env.CIRCLEMAINNET_API_KEY : undefined) || process.env.CIRCLE_API_KEY!,
     entitySecret: process.env.CIRCLE_ENTITY_SECRET!,
   });
 

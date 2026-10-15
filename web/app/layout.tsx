@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Instrument_Serif, Inter_Tight, JetBrains_Mono } from "next/font/google";
-import { Mark } from "@/components/Mark";
+import { Fraunces, Instrument_Serif, Inter_Tight, JetBrains_Mono } from "next/font/google";
+import { Logo } from "@/components/Mark";
 import { Nav } from "@/components/Nav";
 import { Providers } from "@/components/Providers";
 import { chain, explorerAddress, isMainnet, scaleTicketAddress } from "@/lib/network";
@@ -9,6 +9,7 @@ import "./globals.css";
 
 const display = Instrument_Serif({ variable: "--font-display", subsets: ["latin"], weight: "400", style: ["normal", "italic"] });
 const body = Inter_Tight({ variable: "--font-body", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
+const brand = Fraunces({ variable: "--font-brand", subsets: ["latin"], weight: ["700"] });
 const figures = JetBrains_Mono({ variable: "--font-figures", subsets: ["latin"], weight: ["400", "500"] });
 
 export const metadata: Metadata = {
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable} ${figures.variable}`}>
+    <html lang="en" className={`${display.variable} ${body.variable} ${figures.variable} ${brand.variable}`}>
       <body className="flex min-h-screen flex-col">
         <Providers>
           <div className="bg-forest px-4 py-2 text-center text-xs text-lime">
@@ -53,15 +54,12 @@ function Footer() {
       </div>
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div>
-          <div className="flex items-center gap-2.5">
-            <Mark size={30} />
-            <span className="text-lg font-semibold">Scalehouse</span>
-          </div>
+          <Logo size={34} light />
           <p className="mt-4 max-w-xs text-sm text-white/55">
             Evidence-locked payments for the people who weigh, deliver and build. Weighed in public. Paid once.
           </p>
         </div>
-        <FooterCol title="Product" links={[["The board", "/board"], ["Open a house", "/house/new"], ["How it works", "/#how"]]} />
+        <FooterCol title="Product" links={[["The board", "/board"], ["Open a house", "/house/new"], ["How it works", "/#how"], ["Docs", "/docs"], ["FAQ", "/faq"]]} />
         <FooterCol
           title="Contract"
           links={[
@@ -69,7 +67,7 @@ function Footer() {
             ["Specification", "https://github.com/angelraph/scalehouse/blob/main/docs/SPEC.md"],
           ]}
         />
-        <FooterCol title="Source" links={[["GitHub", "https://github.com/angelraph/scalehouse"], ["Arc", "https://arc.io"], ["Circle", "https://circle.com"]]} />
+        <FooterCol title="More" links={[["GitHub", "https://github.com/angelraph/scalehouse"], ["Privacy", "/privacy"], ["Terms", "/terms"], ["Arc", "https://arc.io"]]} />
       </div>
       <div className="mx-auto max-w-6xl overflow-hidden px-4">
         <div className="display -mb-[0.18em] text-[19vw] leading-none text-white/[0.06] select-none md:text-[11rem]">Scalehouse</div>

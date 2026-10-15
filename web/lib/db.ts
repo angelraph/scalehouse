@@ -9,8 +9,8 @@ let client: NeonQueryFunction<false, false> | null = null;
  */
 export function sql(): NeonQueryFunction<false, false> {
   if (client) return client;
-  const url = process.env.DATABASE_URL;
-  if (!url) throw new Error("DATABASE_URL must be set (Neon connection string)");
+  const url = process.env.DATABASE_URL || process.env.NEON_URL;
+  if (!url) throw new Error("DATABASE_URL (or NEON_URL) must be set to the Neon connection string");
   client = neon(url);
   return client;
 }

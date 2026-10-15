@@ -64,7 +64,7 @@ export default async function Home() {
         <div className="dots dots-fade pointer-events-none absolute -inset-x-4 -top-10 bottom-0 -z-10" />
         <Reveal>
           <span className="tag">Evidence-locked payments on {chain.name}</span>
-          <h1 className="display mt-6 text-[3.4rem] sm:text-7xl lg:text-[5.6rem]">
+          <h1 className="display mt-6 text-[2.75rem] sm:text-7xl lg:text-[5.6rem]">
             Weighed in public.
             <br />
             <span className="italic text-forest">Paid once.</span>

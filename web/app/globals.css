@@ -21,10 +21,10 @@
   --muted: #7c7f88;
   --faint: #a9acb6;
 
-  --forest: #163300;
-  --forest-2: #223d0d;
-  --lime: #9fe870;
-  --lime-wash: #e2f6d5;
+  --forest: #0f4a28;
+  --forest-2: #155c33;
+  --lime: #e8ae45;
+  --lime-wash: #e4efe2;
 
   --bronze: #945c26;
   --bronze-wash: #f4ead9;
@@ -83,7 +83,15 @@ body {
   color: var(--forest);
 }
 
+@layer components {
 /* ---------- type ---------- */
+
+/* The brand wordmark: a sturdy, low-contrast serif, as on the logo. */
+.wordmark {
+  font-family: var(--font-brand), Georgia, serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
 
 .display {
   font-family: var(--font-display), Georgia, serif;
@@ -157,7 +165,7 @@ body {
   mask-image: radial-gradient(ellipse at 70% 40%, #000 0%, transparent 70%);
 }
 .dots-lime {
-  background-image: radial-gradient(rgba(159, 232, 112, 0.28) 1px, transparent 1.2px);
+  background-image: radial-gradient(rgba(232, 174, 69, 0.28) 1px, transparent 1.2px);
   background-size: 14px 14px;
 }
 
@@ -207,7 +215,7 @@ body {
   border-color: var(--lime);
 }
 .btn-lime:hover {
-  background: #b3f08b;
+  background: #f0bf5f;
 }
 
 .field {
@@ -239,7 +247,7 @@ select.field {
 .field:focus {
   outline: none;
   border-color: var(--forest);
-  box-shadow: 0 0 0 3px rgba(159, 232, 112, 0.45);
+  box-shadow: 0 0 0 3px rgba(232, 174, 69, 0.45);
 }
 
 .label {
@@ -309,8 +317,11 @@ a.link:hover {
   text-decoration-color: var(--ink);
 }
 
+}
+
 /* ---------- motion ---------- */
 
+@layer components {
 /* Column's reveal: rise, unblur, fade in. Applied by <Reveal>. */
 .reveal {
   opacity: 0;
@@ -328,6 +339,8 @@ a.link:hover {
 }
 
 /* Wise's endless strip; pausable. */
+}
+
 @keyframes marquee {
   from {
     transform: translateX(0);
@@ -383,10 +396,10 @@ a.link:hover {
 @keyframes pulse-dot {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(159, 232, 112, 0.7);
+    box-shadow: 0 0 0 0 rgba(232, 174, 69, 0.7);
   }
   50% {
-    box-shadow: 0 0 0 6px rgba(159, 232, 112, 0);
+    box-shadow: 0 0 0 6px rgba(232, 174, 69, 0);
   }
 }
 .live-dot {

@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Mark } from "./Mark";
+import { Logo } from "./Mark";
 import { WalletButton } from "./Wallet";
 
 const LINKS = [
   { href: "/board", label: "Board" },
-  { href: "/#how", label: "How it works" },
+  { href: "/docs", label: "Docs" },
+  { href: "/faq", label: "FAQ" },
   { href: "/house/new", label: "Open a house" },
 ];
 
@@ -33,10 +34,9 @@ export function Nav({ testnet }: { testnet: boolean }) {
         scrolled || open ? "bg-paper/85 shadow-[0_1px_0_var(--rule)] backdrop-blur-md" : "bg-transparent"
       }`}
     >
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4 sm:gap-4">
         <Link href="/" className="flex items-center gap-2.5">
-          <Mark size={28} />
-          <span className="text-[1.05rem] font-semibold tracking-tight">Scalehouse</span>
+          <Logo size={34} />
           {testnet && <span className="tag hidden sm:inline-flex">testnet</span>}
         </Link>
 
@@ -48,11 +48,11 @@ export function Nav({ testnet }: { testnet: boolean }) {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <WalletButton />
           <button
             type="button"
-            className="grid h-10 w-10 place-items-center rounded-full md:hidden"
+            className="-mr-2 grid h-10 w-10 place-items-center rounded-full md:hidden"
             onClick={() => setOpen((o) => !o)}
             aria-label="Menu"
             aria-expanded={open}

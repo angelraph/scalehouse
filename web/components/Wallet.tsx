@@ -10,10 +10,10 @@ export function WalletButton() {
   if (!address) {
     return (
       <div className="flex flex-col items-end">
-        <button className="btn whitespace-nowrap" disabled={connecting} onClick={connect}>
+        <button className="btn h-10 px-4 whitespace-nowrap sm:h-11 sm:px-5" disabled={connecting} onClick={connect}>
           {connecting ? "Connecting…" : (
             <>
-              Connect<span className="hidden sm:inline">&nbsp;wallet</span>
+              Connect<span className="hidden sm:inline">wallet</span>
             </>
           )}
         </button>
@@ -25,7 +25,7 @@ export function WalletButton() {
   if (!onRightChain) {
     return (
       <button className="btn whitespace-nowrap" onClick={() => switchChain()}>
-        Switch<span className="hidden sm:inline">&nbsp;to {chain.name}</span>
+        Switch<span className="hidden sm:inline">to {chain.name}</span>
       </button>
     );
   }
