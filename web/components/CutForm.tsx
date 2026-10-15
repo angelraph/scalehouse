@@ -28,6 +28,37 @@ export function CutForm({ houseId, symbol, maxTicket, rates }: Props) {
   const [note, setNote] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
   const [stage, setStage] = useState<string | null>(null);
+  const [reading, setReading] = useState(false);
+  const [readError, setReadError] = useState<string | null>(null);
+  const [checks, setChecks] = useState<{ ok: boolean; text: string }[] | null>(null);
+  const [supplier, setSupplier] = useState<string | null>(null);
+
+  /** Snap-to-ticket: the AI reads the document and pre-fills the form; the clerk still reviews. */
+  async function readDocument(file: File) {
+    setReading(true);
+    setReadError(null);
+    setChecks(null);
+    setPhoto(file);
+    try {
+      const form = new FormData();
+      form.set("houseId", String(houseId));
+      form.set("photo", file);
+      const res = await fetch("/api/read-invoice", { method: "POST", body: form });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error);
+      if (body.rateId && rates.some((r) => r.rateId === body.rateId)) setRateId(body.rateId);
+      if (body.quantity) setQuantity(String(body.quantity));
+      if (body.reference) setReference(body.reference);
+      if (body.payee) setPayee(body.payee);
+      if (body.note) setNote(body.note);
+      setSupplier(body.supplier ?? null);
+      setChecks(body.checks ?? []);
+    } catch (e) {
+      setReadError((e as Error).message);
+    } finally {
+      setReading(false);
+    }
+  }
 
   const rate = rates.find((r) => r.rateId === rateId)!;
   const amount = useMemo(() => {
@@ -73,6 +104,54 @@ export function CutForm({ houseId, symbol, maxTicket, rates }: Props) {
   return (
     <RequireWallet why="Connect your clerk wallet for this house.">
       <div className="card space-y-5 p-6">
+        <div className="relative overflow-hidden rounded-2xl border border-dashed border-rule-strong bg-paper-2 p-5">
+          <div className="dots pointer-events-none absolute inset-0 opacity-40" />
+          <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2 font-semibold">
+                <span className="tag !normal-case">AI</span> Snap the invoice or delivery note
+              </div>
+              <p className="mt-1 text-sm text-muted">The agent reads it, matches it to your prices and fills this form. You check, then cut.</p>
+            </div>
+            <label className={`btn shrink-0 cursor-pointer ${reading ? "pointer-events-none opacity-60" : ""}`}>
+              {reading ? "Reading…" : photo && checks ? "Snap another" : "Take or choose photo"}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                capture="environment"
+                className="sr-only"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) readDocument(f);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+          </div>
+          {reading && (
+            <div className="relative mt-4 h-1 overflow-hidden rounded-full bg-rule">
+              <div className="h-full w-1/3 animate-[scan_1.2s_ease-in-out_infinite] rounded-full bg-forest" />
+              <style>{`@keyframes scan{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}`}</style>
+            </div>
+          )}
+          {readError && <p className="relative mt-3 text-sm text-red">{readError}</p>}
+          {checks && (
+            <ul className="relative mt-4 space-y-1.5 text-sm">
+              {supplier && (
+                <li className="text-ink-2">
+                  From <span className="font-semibold">{supplier}</span>
+                </li>
+              )}
+              {checks.map((c) => (
+                <li key={c.text} className={`flex gap-2 ${c.ok ? "text-forest" : "text-bronze"}`}>
+                  <span aria-hidden>{c.ok ? "✓" : "!"}</span>
+                  <span>{c.text}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
         <div>
           <label className="label" htmlFor="rate">What</label>
           <select id="rate" className="field" value={rateId} onChange={(e) => setRateId(e.target.value as Hex)}>
@@ -102,7 +181,7 @@ export function CutForm({ houseId, symbol, maxTicket, rates }: Props) {
           <textarea id="note" className="field" rows={2} placeholder="e.g. 10 bags, two slightly torn" value={note} onChange={(e) => setNote(e.target.value)} />
         </div>
         <div>
-          <label className="label" htmlFor="photo">Photo (optional)</label>
+          <label className="label" htmlFor="photo">Photo (optional{photo ? `: ${photo.name}` : ""})</label>
           <input id="photo" type="file" accept="image/*" capture="environment" className="text-sm" onChange={(e) => setPhoto(e.target.files?.[0] ?? null)} />
           <p className="mt-1 text-xs text-muted">Photos are public on the board. Don&apos;t include faces or personal details.</p>
         </div>
