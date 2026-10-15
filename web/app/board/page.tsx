@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 const FILTERS: (StatusName | "All")[] = ["All", "Open", "Confirmed", "Paid", "Frozen", "Voided"];
 
 export default async function Board({ searchParams }: { searchParams: Promise<{ status?: string; house?: string }> }) {
-  if (!scaleTicketAddress) return <p className="text-ink-soft">ScaleTicket isn&apos;t deployed on this network yet.</p>;
+  if (!scaleTicketAddress) return <p className="text-muted">ScaleTicket isn&apos;t deployed on this network yet.</p>;
   const { status = "All", house } = await searchParams;
 
   await syncIfStale();
@@ -31,31 +31,35 @@ export default async function Board({ searchParams }: { searchParams: Promise<{ 
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="font-serif text-4xl font-bold">The board</h1>
-        <p className="mt-2 max-w-2xl text-ink-soft">
-          Every ticket in every house, read directly from the ScaleTicket contract. Paid, waiting, frozen and why. Nothing
-          here can be edited after the fact.
+      <div className="relative pt-8">
+        <div className="dots dots-fade pointer-events-none absolute -inset-x-4 -top-6 bottom-0 -z-10" />
+        <span className="tag">The public ledger</span>
+        <h1 className="display mt-5 text-6xl sm:text-7xl">The board</h1>
+        <p className="two-tone mt-4 max-w-2xl text-xl">
+          Every ticket in every house. <em>Paid, waiting, frozen and why, read directly from the contract. Nothing here can be edited after the fact.</em>
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <nav className="tabs text-sm">
         {FILTERS.map((f) => (
-          <Link
-            key={f}
-            href={`/board?status=${f}${house ? `&house=${house}` : ""}`}
-            className={`stamp ${f === status ? "bg-ink text-paper" : "text-ink-soft"}`}
-          >
+          <Link key={f} href={`/board?status=${f}${house ? `&house=${house}` : ""}`} aria-current={f === status}>
             {f === "Open" ? "Awaiting witness" : f}
+            <span className="figure ml-1.5 text-xs text-faint">
+              {f === "All" ? tickets.length : tickets.filter((t) => t.status === f).length}
+            </span>
           </Link>
         ))}
-      </div>
+      </nav>
 
       {houses.length > 0 && (
-        <div className="flex flex-wrap gap-2 text-sm">
-          <span className="text-ink-soft">Houses:</span>
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="eyebrow mr-1">Houses</span>
           {houses.map((h) => (
-            <Link key={h.id} href={`/house/${h.id}`} className="link">
+            <Link
+              key={h.id}
+              href={`/house/${h.id}`}
+              className="rounded-full bg-sheet px-3 py-1.5 shadow-[var(--ring)] transition-shadow hover:shadow-[var(--lift)]"
+            >
               {names.get(h.id) ?? `House ${h.id}`}
             </Link>
           ))}
@@ -63,12 +67,12 @@ export default async function Board({ searchParams }: { searchParams: Promise<{ 
       )}
 
       {shown.length === 0 ? (
-        <div className="sheet p-8 text-center text-ink-soft">No tickets here yet.</div>
+        <div className="card p-8 text-center text-muted">No tickets here yet.</div>
       ) : (
-        <div className="sheet overflow-x-auto">
+        <div className="card overflow-x-auto">
           <table className="w-full min-w-[720px] text-sm">
             <thead>
-              <tr className="border-b border-rule text-left text-xs uppercase tracking-[0.12em] text-ink-soft">
+              <tr className="border-b border-rule text-left text-xs uppercase tracking-[0.12em] text-muted">
                 <th className="px-4 py-3 font-medium">Ticket</th>
                 <th className="px-4 py-3 font-medium">House</th>
                 <th className="px-4 py-3 font-medium">Pays</th>
@@ -83,7 +87,7 @@ export default async function Board({ searchParams }: { searchParams: Promise<{ 
                 const q = t.confirmedQuantity || t.quantity;
                 const reason = freezeReason.get(t.id);
                 return (
-                  <tr key={t.id} className="border-b border-rule last:border-0 hover:bg-paper">
+                  <tr key={t.id} className="border-b border-rule last:border-0 hover:bg-paper-2">
                     <td className="px-4 py-3">
                       <Link href={`/t/${t.id}`} className="link figure">
                         #{t.id}
@@ -95,9 +99,9 @@ export default async function Board({ searchParams }: { searchParams: Promise<{ 
                     <td className="figure px-4 py-3 text-right">{money(grossOf(q, t.unitPrice), symbolOf.get(t.houseId))}</td>
                     <td className="px-4 py-3">
                       <Stamp status={t.status} />
-                      {t.status === "Frozen" && reason && <div className="mt-1 max-w-[16rem] text-xs text-frozen">{REASON_TEXT[reason]}</div>}
+                      {t.status === "Frozen" && reason && <div className="mt-1 max-w-[16rem] text-xs text-red">{REASON_TEXT[reason]}</div>}
                     </td>
-                    <td className="px-4 py-3 text-ink-soft">{timeAgo(t.settledAt || t.cutAt)}</td>
+                    <td className="px-4 py-3 text-muted">{timeAgo(t.settledAt || t.cutAt)}</td>
                   </tr>
                 );
               })}

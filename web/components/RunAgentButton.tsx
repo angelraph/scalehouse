@@ -32,7 +32,7 @@ export function RunAgentButton({ houseId }: { houseId: number }) {
       <button className="btn btn-quiet" disabled={busy} onClick={run}>
         {busy ? "Agent is reviewing…" : "Ask the agent to review"}
       </button>
-      {msg && <span className="mt-1 max-w-xs text-right text-xs text-frozen">{msg}</span>}
+      {msg && <span className="mt-1 max-w-xs text-right text-xs text-red">{msg}</span>}
     </div>
   );
 }

@@ -1,26 +1,21 @@
 import "server-only";
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
 
-let client: SupabaseClient | null = null;
+let client: NeonQueryFunction<false, false> | null = null;
 
-export function db(): SupabaseClient {
+/**
+ * Neon Postgres over HTTP: one round trip per query, no connection pool to manage, which suits
+ * serverless functions. Use as a tagged template: await sql()`select … where id = ${id}`.
+ */
+export function sql(): NeonQueryFunction<false, false> {
   if (client) return client;
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set");
-  client = createClient(url, key, { auth: { persistSession: false } });
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL must be set (Neon connection string)");
+  client = neon(url);
   return client;
 }
 
-export const EVIDENCE_BUCKET = "sh-evidence";
-
-export function evidencePhotoUrl(path: string | null | undefined): string | null {
-  if (!path) return null;
-  return db().storage.from(EVIDENCE_BUCKET).getPublicUrl(path).data.publicUrl;
-}
-
-/** Throws with the table name so a missing migration is obvious instead of a silent empty page. */
-export function must<T>(res: { data: T | null; error: { message: string } | null }, what: string): T {
-  if (res.error) throw new Error(`${what}: ${res.error.message}`);
-  return res.data as T;
+/** Public URL for an evidence photo stored in sh_evidence.photo. */
+export function evidencePhotoUrl(hash: string, hasPhoto: boolean): string | null {
+  return hasPhoto ? `/api/evidence/photo/${hash.toLowerCase()}` : null;
 }

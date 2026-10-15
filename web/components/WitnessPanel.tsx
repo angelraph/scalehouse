@@ -26,7 +26,7 @@ export function WitnessPanel(props: { ticketId: number; houseId: number; claimed
     try {
       observed = toQty(count);
     } catch (e) {
-      setMsg({ tone: "text-frozen", text: (e as Error).message });
+      setMsg({ tone: "text-red", text: (e as Error).message });
       return;
     }
     setBusy(true);
@@ -55,21 +55,21 @@ export function WitnessPanel(props: { ticketId: number; houseId: number; claimed
       if (!res.ok) throw new Error(body.error ?? "Confirmation failed");
       setMsg(
         body.result === "frozen"
-          ? { tone: "text-frozen", text: "Your count is outside the allowed difference, so the ticket froze. The owner will review it." }
-          : { tone: "text-paid", text: "Confirmed. The agent is reviewing it for payment now." },
+          ? { tone: "text-red", text: "Your count is outside the allowed difference, so the ticket froze. The owner will review it." }
+          : { tone: "text-forest", text: "Confirmed. The agent is reviewing it for payment now." },
       );
       router.refresh();
     } catch (e) {
-      setMsg({ tone: "text-frozen", text: (e as Error).message.split("\n")[0] });
+      setMsg({ tone: "text-red", text: (e as Error).message.split("\n")[0] });
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <div className="sheet p-5">
-      <h2 className="mb-1 font-serif text-xl font-bold">Witness this ticket</h2>
-      <p className="mb-4 text-sm text-ink-soft">
+    <div className="card p-5">
+      <h2 className="mb-1 display text-2xl">Witness this ticket</h2>
+      <p className="mb-4 text-sm text-muted">
         Count it yourself and enter what you counted, not what the ticket says. The ticket claims{" "}
         <span className="figure">{qty(BigInt(props.claimed))}</span>. Signing costs nothing.
       </p>

@@ -44,7 +44,7 @@ reasoning, checked against the hash the agent put on-chain.
 | Lowering a risky counterparty's per-ticket cap | Once only: a ticket can't pay twice |
 | What to flag for the owner, and why | Limits: per ticket, per day, per counterparty |
 
-The agent is Claude (`claude-opus-5-5`) with eight tools (`web/lib/agent/tools.ts`). Code-level
+The agent runs on OpenAI (`OPENAI_MODEL`, default `gpt-5`) with eight strict function tools (`web/lib/agent/tools.ts`). Code-level
 guards sit on top of the contract: no release to a payee that wasn't screened in the same run, and a
 screening outage means **do not pay**.
 
@@ -63,7 +63,7 @@ screening outage means **do not pay**.
 ```
 contracts/   ScaleTicket.sol + 27 Foundry tests (incl. fuzz)   → docs/SPEC.md
 web/         Next.js app: board, houses, cut/witness flows, agent, API
-supabase/    one migration: evidence, agent reasoning, event index
+db/          schema.sql for Neon Postgres: evidence, agent reasoning, event index
 ```
 
 ## Run it
@@ -74,7 +74,7 @@ cd web && cp .env.example .env.local   # fill in
 npm install && npm run dev
 ```
 
-Run `supabase/migrations/0001_scalehouse.sql` once in your Supabase SQL editor.
+Run `db/schema.sql` once against your Neon database.
 
 ## Honesty notes
 

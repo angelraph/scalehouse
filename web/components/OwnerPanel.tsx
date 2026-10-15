@@ -68,12 +68,12 @@ function Panel(p: Props) {
   return (
     <section className="space-y-4">
       <div className="flex items-baseline justify-between">
-        <h2 className="font-serif text-2xl font-bold">Owner controls</h2>
-        <span className="text-xs text-ink-soft">Only your wallet sees this</span>
+        <h2 className="display text-3xl">Owner controls</h2>
+        <span className="text-xs text-muted">Only your wallet sees this</span>
       </div>
-      {pending && <p className="text-sm text-waiting">{pending}…</p>}
-      {error && <p className="text-sm text-frozen">{error}</p>}
-      {note && !pending && !error && <p className="text-sm text-paid">✓ {note}</p>}
+      {pending && <p className="text-sm text-bronze">{pending}…</p>}
+      {error && <p className="text-sm text-red">{error}</p>}
+      {note && !pending && !error && <p className="text-sm text-forest">✓ {note}</p>}
 
       <div className="grid gap-4 lg:grid-cols-2">
         {!p.agentAppointed && (
@@ -118,7 +118,7 @@ function Panel(p: Props) {
         />
 
         <Card title="Budget">
-          <p className="mb-3 text-sm text-ink-soft">How much Scalehouse may pay out of your wallet in total. Payments use it up; top it up when it runs low.</p>
+          <p className="mb-3 text-sm text-muted">How much Scalehouse may pay out of your wallet in total. Payments use it up; top it up when it runs low.</p>
           <AmountRow
             label={`New budget (${p.symbol})`}
             action="Approve"
@@ -136,7 +136,7 @@ function Panel(p: Props) {
         />
 
         <Card title={p.paused ? "Payments are paused" : "Pause payments"}>
-          <p className="mb-3 text-sm text-ink-soft">Stops all tickets in this house from paying until you resume. Nothing is lost.</p>
+          <p className="mb-3 text-sm text-muted">Stops all tickets in this house from paying until you resume. Nothing is lost.</p>
           <button
             className="btn btn-quiet"
             onClick={async () => (await send(p.paused ? "Resuming" : "Pausing", { ...st, functionName: "setHousePaused", args: [h, !p.paused] })) && done(p.paused ? "Resumed" : "Paused")}
@@ -151,7 +151,7 @@ function Panel(p: Props) {
               {p.frozen.map((f) => (
                 <div key={f.id} className="rounded border border-rule p-3 text-sm">
                   <div className="figure mb-1">Ticket #{f.id}</div>
-                  {f.reason && <p className="mb-2 text-frozen">{REASON_TEXT[f.reason]}</p>}
+                  {f.reason && <p className="mb-2 text-red">{REASON_TEXT[f.reason]}</p>}
                   <div className="flex flex-wrap gap-2">
                     <button
                       className="btn btn-quiet"
@@ -178,7 +178,7 @@ function Panel(p: Props) {
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="sheet p-5">
+    <div className="card p-5">
       <h3 className="mb-3 font-semibold">{title}</h3>
       {children}
     </div>
@@ -203,7 +203,7 @@ function PriceForm({ onSubmit, symbol }: { onSubmit: (label: string, price: stri
   const [days, setDays] = useState("30");
   return (
     <Card title="Post a price">
-      <p className="mb-3 text-sm text-ink-soft">What one unit is worth: a bag, a kilo, an hour, a finished task. Tickets lock the price at the moment they&apos;re cut.</p>
+      <p className="mb-3 text-sm text-muted">What one unit is worth: a bag, a kilo, an hour, a finished task. Tickets lock the price at the moment they&apos;re cut.</p>
       <div className="space-y-2">
         <input className="field" placeholder="What (e.g. Rice, 50kg bag)" value={label} onChange={(e) => setLabel(e.target.value)} />
         <div className="flex gap-2">
@@ -225,7 +225,7 @@ function TeamForm({ onSubmit }: { onSubmit: (who: Address, label: string, clerk:
   const [witness, setWitness] = useState(false);
   return (
     <Card title="Team">
-      <p className="mb-3 text-sm text-ink-soft">Clerks cut tickets. Witnesses count and confirm. The same person can&apos;t witness a ticket they cut or get paid by.</p>
+      <p className="mb-3 text-sm text-muted">Clerks cut tickets. Witnesses count and confirm. The same person can&apos;t witness a ticket they cut or get paid by.</p>
       <div className="space-y-2">
         <input className="field figure" placeholder="Wallet address 0x…" value={who} onChange={(e) => setWho(e.target.value)} />
         <input className="field" placeholder="Name (optional)" value={label} onChange={(e) => setLabel(e.target.value)} />
@@ -250,7 +250,7 @@ function NameForm({ onSubmit }: { onSubmit: (who: Address, label: string) => voi
   const [label, setLabel] = useState("");
   return (
     <Card title="Name a wallet">
-      <p className="mb-3 text-sm text-ink-soft">Give a supplier or worker a name so tickets read &ldquo;Chidi, rice&rdquo; instead of 0x7a…. Free to sign.</p>
+      <p className="mb-3 text-sm text-muted">Give a supplier or worker a name so tickets read &ldquo;Chidi, rice&rdquo; instead of 0x7a…. Free to sign.</p>
       <div className="space-y-2">
         <input className="field figure" placeholder="Wallet address 0x…" value={who} onChange={(e) => setWho(e.target.value)} />
         <input className="field" placeholder="Name" value={label} onChange={(e) => setLabel(e.target.value)} />
@@ -276,7 +276,7 @@ function LimitsForm({
   const [tol, setTol] = useState(String(current.toleranceBps / 100));
   return (
     <Card title="Limits">
-      <p className="mb-3 text-sm text-ink-soft">
+      <p className="mb-3 text-sm text-muted">
         Now: {money(BigInt(current.maxTicket), symbol)} per ticket, {money(BigInt(current.dailyCap), symbol)} per day, {current.toleranceBps / 100}% counting difference.
       </p>
       <div className="space-y-2">

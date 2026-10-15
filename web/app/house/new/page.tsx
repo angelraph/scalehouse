@@ -70,15 +70,15 @@ export default function NewHouse() {
   return (
     <div className="mx-auto max-w-2xl space-y-8">
       <div>
-        <h1 className="font-serif text-4xl font-bold">Open a house</h1>
-        <p className="mt-2 text-ink-soft">
+        <h1 className="display text-5xl">Open a house</h1>
+        <p className="mt-2 text-muted">
           A house is your business on Scalehouse. Your wallet pays. Your money never leaves your wallet until a ticket clears,
           and then it goes straight to the person you owe. You can pause or change limits at any time.
         </p>
       </div>
 
       <RequireWallet why="Connect the wallet your business pays from.">
-        <div className="sheet space-y-5 p-6">
+        <div className="card space-y-5 p-6">
           <div>
             <label className="label" htmlFor="name">Business name</label>
             <input id="name" className="field" placeholder="e.g. Mama Ada Provisions" value={name} onChange={(e) => setName(e.target.value)} />
@@ -105,16 +105,16 @@ export default function NewHouse() {
             <div>
               <label className="label" htmlFor="tol">Allowed counting difference (%)</label>
               <input id="tol" className="field figure" inputMode="decimal" value={tolerance} onChange={(e) => setTolerance(e.target.value)} />
-              <p className="mt-1 text-xs text-ink-soft">If the witness counts more than this away from the ticket, it freezes.</p>
+              <p className="mt-1 text-xs text-muted">If the witness counts more than this away from the ticket, it freezes.</p>
             </div>
             <div>
               <label className="label" htmlFor="budget">Total you allow Scalehouse to pay ({token})</label>
               <input id="budget" className="field figure" inputMode="decimal" value={budget} onChange={(e) => setBudget(e.target.value)} />
-              <p className="mt-1 text-xs text-ink-soft">Your wallet approval. Raise or revoke it any time.</p>
+              <p className="mt-1 text-xs text-muted">Your wallet approval. Raise or revoke it any time.</p>
             </div>
           </div>
 
-          <div className="rounded border border-rule bg-paper p-4 text-sm text-ink-soft">
+          <div className="rounded border border-rule bg-paper p-4 text-sm text-muted">
             Three wallet confirmations: open the house, appoint the Scalehouse agent, and approve the budget. Each costs about a
             cent in fees.
           </div>
@@ -123,9 +123,9 @@ export default function NewHouse() {
             {pending ?? "Open the house"}
           </button>
           {done.map((d) => (
-            <p key={d} className="text-sm text-paid">✓ {d}</p>
+            <p key={d} className="text-sm text-forest">✓ {d}</p>
           ))}
-          {error && <p className="text-sm text-frozen">{error}</p>}
+          {error && <p className="text-sm text-red">{error}</p>}
         </div>
       </RequireWallet>
     </div>

@@ -72,7 +72,7 @@ export function CutForm({ houseId, symbol, maxTicket, rates }: Props) {
 
   return (
     <RequireWallet why="Connect your clerk wallet for this house.">
-      <div className="sheet space-y-5 p-6">
+      <div className="card space-y-5 p-6">
         <div>
           <label className="label" htmlFor="rate">What</label>
           <select id="rate" className="field" value={rateId} onChange={(e) => setRateId(e.target.value as Hex)}>
@@ -90,12 +90,12 @@ export function CutForm({ houseId, symbol, maxTicket, rates }: Props) {
         <div>
           <label className="label" htmlFor="payee">Who gets paid (their wallet)</label>
           <input id="payee" className="field figure" placeholder="0x…" value={payee} onChange={(e) => setPayee(e.target.value.trim())} />
-          <p className="mt-1 text-xs text-ink-soft">Check it twice. This wallet is locked onto the ticket and can&apos;t be changed later by anyone.</p>
+          <p className="mt-1 text-xs text-muted">Check it twice. This wallet is locked onto the ticket and can&apos;t be changed later by anyone.</p>
         </div>
         <div>
           <label className="label" htmlFor="ref">Reference</label>
           <input id="ref" className="field" placeholder="Invoice, delivery note or job number" value={reference} onChange={(e) => setReference(e.target.value)} />
-          <p className="mt-1 text-xs text-ink-soft">The same reference from the same payee can only be ticketed once.</p>
+          <p className="mt-1 text-xs text-muted">The same reference from the same payee can only be ticketed once.</p>
         </div>
         <div>
           <label className="label" htmlFor="note">Note (optional)</label>
@@ -104,19 +104,19 @@ export function CutForm({ houseId, symbol, maxTicket, rates }: Props) {
         <div>
           <label className="label" htmlFor="photo">Photo (optional)</label>
           <input id="photo" type="file" accept="image/*" capture="environment" className="text-sm" onChange={(e) => setPhoto(e.target.files?.[0] ?? null)} />
-          <p className="mt-1 text-xs text-ink-soft">Photos are public on the board. Don&apos;t include faces or personal details.</p>
+          <p className="mt-1 text-xs text-muted">Photos are public on the board. Don&apos;t include faces or personal details.</p>
         </div>
 
         <div className="flex items-baseline justify-between border-t border-rule pt-4">
-          <span className="text-ink-soft">The rule will pay</span>
-          <span className={`figure text-2xl ${overCap ? "text-frozen" : ""}`}>{amount != null ? money(amount, symbol) : "—"}</span>
+          <span className="text-muted">The rule will pay</span>
+          <span className={`figure text-2xl ${overCap ? "text-red" : ""}`}>{amount != null ? money(amount, symbol) : "—"}</span>
         </div>
-        {overCap && <p className="text-sm text-frozen">That&apos;s above this house&apos;s limit of {money(BigInt(maxTicket), symbol)} per ticket. Split it or ask the owner.</p>}
+        {overCap && <p className="text-sm text-red">That&apos;s above this house&apos;s limit of {money(BigInt(maxTicket), symbol)} per ticket. Split it or ask the owner.</p>}
 
         <button className="btn w-full" disabled={!valid || !!pending || !!stage} onClick={cut}>
           {stage ?? pending ?? "Cut the ticket"}
         </button>
-        {error && <p className="text-sm text-frozen">{error}</p>}
+        {error && <p className="text-sm text-red">{error}</p>}
       </div>
     </RequireWallet>
   );

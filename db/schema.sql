@@ -1,7 +1,7 @@
--- Scalehouse off-chain store. The chain is the source of truth for money and ticket state;
--- this holds only what the chain points at by hash (evidence and agent reasoning) plus an
--- event index so pages don't rescan the chain on every view.
--- Run once in the Supabase SQL editor.
+-- Scalehouse off-chain store (Neon Postgres). The chain is the source of truth for money and
+-- ticket state; this holds only what the chain points at by hash (evidence and agent
+-- reasoning) plus an event index so pages don't rescan the chain on every view.
+-- Idempotent: safe to run more than once.
 
 create table if not exists sh_evidence (
   evidence_hash text primary key,          -- keccak256(payee, normalized reference), as on-chain
@@ -9,7 +9,8 @@ create table if not exists sh_evidence (
   payee         text not null,
   reference     text not null,             -- invoice / delivery note / job reference
   note          text not null default '',
-  photo_path    text,                      -- path in the public "evidence" bucket
+  photo         bytea,                     -- evidence photo, served at /api/evidence/photo/<hash>
+  photo_type    text,
   photo_sha256  text,
   created_by    text not null,
   created_at    timestamptz not null default now()
@@ -19,9 +20,9 @@ create table if not exists sh_rationales (
   rationale_hash text primary key,         -- keccak256 of the canonical JSON in `rationale`
   house_id       integer not null,
   ticket_id      integer,
-  kind           text not null,            -- RELEASE | DEFER | FLAG | CAP | SCREEN | RUN
+  kind           text not null,            -- RELEASE | DEFER | FLAG | CAP
   model          text not null,
-  rationale      jsonb not null,
+  rationale      text not null,            -- canonical JSON, stored verbatim so the hash re-checks
   tx_hash        text,
   created_at     timestamptz not null default now()
 );
@@ -62,6 +63,7 @@ create table if not exists sh_agent_runs (
   id          bigint generated always as identity primary key,
   house_id    integer not null,
   trigger     text not null,
+  model       text,
   summary     text,
   transcript  jsonb,
   started_at  timestamptz not null default now(),
@@ -69,24 +71,10 @@ create table if not exists sh_agent_runs (
 );
 create index if not exists sh_agent_runs_house on sh_agent_runs (house_id, started_at desc);
 
--- Labels people give wallets inside a house ("Chidi - rice supplier"). Display only.
+-- Names a house owner gives wallets ("Chidi, rice supplier"). Display only.
 create table if not exists sh_labels (
   house_id integer not null,
   address  text not null,
   label    text not null,
   primary key (house_id, address)
 );
-
--- Server-only access: RLS on, no policies. The service role bypasses RLS.
-alter table sh_evidence   enable row level security;
-alter table sh_rationales enable row level security;
-alter table sh_events     enable row level security;
-alter table sh_sync       enable row level security;
-alter table sh_screenings enable row level security;
-alter table sh_agent_runs enable row level security;
-alter table sh_labels     enable row level security;
-
--- Public bucket for evidence photos (the cut form warns that photos are public).
-insert into storage.buckets (id, name, public)
-values ('sh-evidence', 'sh-evidence', true)
-on conflict (id) do nothing;

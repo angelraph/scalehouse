@@ -4,7 +4,7 @@ import { OwnerPanel } from "@/components/OwnerPanel";
 import { RunAgentButton } from "@/components/RunAgentButton";
 import { Stamp } from "@/components/Stamp";
 import { housePosition, readHouse } from "@/lib/chain";
-import { db, must } from "@/lib/db";
+import { sql } from "@/lib/db";
 import { grossOf, money, qty, short, timeAgo } from "@/lib/format";
 import { freezeReasons, houseName, houseRates, houseTeam, houseTickets, labels } from "@/lib/house";
 import { syncIfStale } from "@/lib/indexer";
@@ -36,9 +36,9 @@ export default async function HousePage({ params }: { params: Promise<{ id: stri
     houseTeam(id),
     labels(id),
     freezeReasons(id),
-    db().from("sh_agent_runs").select("id,trigger,summary,transcript,started_at").eq("house_id", id).order("started_at", { ascending: false }).limit(5),
+    sql()`select id, trigger, summary, transcript, started_at from sh_agent_runs where house_id = ${id} order by started_at desc limit 5`.catch(() => []),
   ]);
-  const runs = must(runsRes, "sh_agent_runs") as RunRow[];
+  const runs = runsRes as RunRow[];
   const symbol = tokenSymbol(house.token);
   const agentAppointed = house.agent.toLowerCase() === agentAddress.toLowerCase();
   const label = (a: string) => names.get(a.toLowerCase()) ?? short(a);
@@ -50,15 +50,15 @@ export default async function HousePage({ params }: { params: Promise<{ id: stri
     <div className="space-y-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm text-ink-soft">House #{id}</p>
-          <h1 className="font-serif text-4xl font-bold">{name}</h1>
-          <p className="mt-1 text-sm text-ink-soft">
+          <p className="text-sm text-muted">House #{id}</p>
+          <h1 className="display text-5xl">{name}</h1>
+          <p className="mt-1 text-sm text-muted">
             Pays from{" "}
             <a className="link figure" href={explorerAddress(house.owner)} target="_blank" rel="noreferrer">
               {short(house.owner)}
             </a>{" "}
             in {symbol}
-            {house.paused && <span className="stamp ml-2 text-frozen">paused</span>}
+            {house.paused && <span className="tag ml-2 !bg-red-wash !text-red">paused</span>}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -77,31 +77,31 @@ export default async function HousePage({ params }: { params: Promise<{ id: stri
       </section>
 
       {!agentAppointed && (
-        <div className="sheet border-waiting p-4 text-sm">
+        <div className="card border-bronze p-4 text-sm">
           This house hasn&apos;t appointed the Scalehouse agent, so nothing here is paid automatically.
         </div>
       )}
 
       <section className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
         <div>
-          <h2 className="mb-3 font-serif text-2xl font-bold">Tickets</h2>
+          <h2 className="mb-3 display text-3xl">Tickets</h2>
           {ordered.length === 0 ? (
-            <div className="sheet p-6 text-ink-soft">No tickets yet. A clerk cuts the first one when goods arrive or work is delivered.</div>
+            <div className="card p-6 text-muted">No tickets yet. A clerk cuts the first one when goods arrive or work is delivered.</div>
           ) : (
-            <div className="sheet ruled">
+            <div className="card ruled">
               {ordered.map((t) => {
                 const q = t.confirmedQuantity || t.quantity;
                 const why = frozen.get(t.id);
                 return (
-                  <Link key={t.id} href={`/t/${t.id}`} className="block px-4 py-3 hover:bg-paper">
+                  <Link key={t.id} href={`/t/${t.id}`} className="block px-4 py-3 hover:bg-paper-2">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="figure">#{t.id}</span>
                       <span className="flex-1 truncate">{label(t.payee)}</span>
-                      <span className="figure text-ink-soft">{qty(q)} × {money(t.unitPrice, symbol)}</span>
+                      <span className="figure text-muted">{qty(q)} × {money(t.unitPrice, symbol)}</span>
                       <span className="figure">{money(grossOf(q, t.unitPrice), symbol)}</span>
                       <Stamp status={t.status} />
                     </div>
-                    {t.status === "Frozen" && why && <p className="mt-1 text-xs text-frozen">{REASON_TEXT[why]}</p>}
+                    {t.status === "Frozen" && why && <p className="mt-1 text-xs text-red">{REASON_TEXT[why]}</p>}
                   </Link>
                 );
               })}
@@ -111,9 +111,9 @@ export default async function HousePage({ params }: { params: Promise<{ id: stri
 
         <div className="space-y-6">
           <div>
-            <h2 className="mb-3 font-serif text-2xl font-bold">Posted prices</h2>
-            <div className="sheet ruled text-sm">
-              {activeRates.length === 0 && <p className="px-4 py-3 text-ink-soft">No prices posted yet.</p>}
+            <h2 className="mb-3 display text-3xl">Posted prices</h2>
+            <div className="card ruled text-sm">
+              {activeRates.length === 0 && <p className="px-4 py-3 text-muted">No prices posted yet.</p>}
               {activeRates.map((r) => (
                 <div key={r.rateId} className="flex justify-between px-4 py-3">
                   <span>{r.label}</span>
@@ -123,13 +123,13 @@ export default async function HousePage({ params }: { params: Promise<{ id: stri
             </div>
           </div>
           <div>
-            <h2 className="mb-3 font-serif text-2xl font-bold">Team</h2>
-            <div className="sheet ruled text-sm">
-              {team.length === 0 && <p className="px-4 py-3 text-ink-soft">No clerks or witnesses yet.</p>}
+            <h2 className="mb-3 display text-3xl">Team</h2>
+            <div className="card ruled text-sm">
+              {team.length === 0 && <p className="px-4 py-3 text-muted">No clerks or witnesses yet.</p>}
               {team.map((m) => (
                 <div key={m.address} className="flex justify-between gap-2 px-4 py-3">
                   <span className="truncate">{label(m.address)}</span>
-                  <span className="text-ink-soft">{[m.roles & 1 ? "clerk" : null, m.roles & 2 ? "witness" : null].filter(Boolean).join(" + ")}</span>
+                  <span className="text-muted">{[m.roles & 1 ? "clerk" : null, m.roles & 2 ? "witness" : null].filter(Boolean).join(" + ")}</span>
                 </div>
               ))}
             </div>
@@ -138,14 +138,14 @@ export default async function HousePage({ params }: { params: Promise<{ id: stri
       </section>
 
       <section>
-        <h2 className="mb-3 font-serif text-2xl font-bold">What the agent did</h2>
+        <h2 className="mb-3 display text-3xl">What the agent did</h2>
         {runs.length === 0 ? (
-          <div className="sheet p-6 text-ink-soft">The agent hasn&apos;t run for this house yet. It runs when a ticket is confirmed.</div>
+          <div className="card p-6 text-muted">The agent hasn&apos;t run for this house yet. It runs when a ticket is confirmed.</div>
         ) : (
           <div className="space-y-3">
             {runs.map((r) => (
-              <div key={r.id} className="sheet p-4">
-                <div className="mb-2 flex flex-wrap justify-between gap-2 text-xs text-ink-soft">
+              <div key={r.id} className="card p-4">
+                <div className="mb-2 flex flex-wrap justify-between gap-2 text-xs text-muted">
                   <span>{r.trigger}</span>
                   <span>{timeAgo(new Date(r.started_at).getTime() / 1000)}</span>
                 </div>
@@ -155,7 +155,7 @@ export default async function HousePage({ params }: { params: Promise<{ id: stri
                     {r.transcript.actions.map((a, i) => (
                       <li key={i} className="figure flex flex-wrap gap-2">
                         <span>{a.tool}{a.ticketId ? ` #${a.ticketId}` : ""}</span>
-                        <span className={a.outcome.startsWith("PAID") ? "text-paid" : a.outcome.startsWith("FROZEN") ? "text-frozen" : "text-ink-soft"}>{a.outcome}</span>
+                        <span className={a.outcome.startsWith("PAID") ? "text-forest" : a.outcome.startsWith("FROZEN") ? "text-red" : "text-muted"}>{a.outcome}</span>
                         {a.txHash && (
                           <a className="link" href={explorerTx(a.txHash)} target="_blank" rel="noreferrer">
                             tx
@@ -187,10 +187,10 @@ export default async function HousePage({ params }: { params: Promise<{ id: stri
 
 function Figure({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="sheet px-4 py-3">
-      <div className="text-xs uppercase tracking-[0.12em] text-ink-soft">{label}</div>
+    <div className="card px-4 py-3">
+      <div className="text-xs uppercase tracking-[0.12em] text-muted">{label}</div>
       <div className="figure mt-1 text-xl">{value}</div>
-      {sub && <div className="text-xs text-ink-soft">{sub}</div>}
+      {sub && <div className="text-xs text-muted">{sub}</div>}
     </div>
   );
 }

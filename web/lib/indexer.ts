@@ -2,7 +2,7 @@ import "server-only";
 import { parseEventLogs } from "viem";
 import { scaleTicketAbi } from "./abi";
 import { publicClient } from "./chain";
-import { db, must } from "./db";
+import { sql } from "./db";
 import { deployBlock, scaleTicketAddress } from "./network";
 
 // Arc's public RPC caps eth_getLogs at 5,000 blocks (~40 minutes at ~0.5s blocks).
@@ -31,7 +31,7 @@ const jsonable = (args: Record<string, unknown>) =>
  */
 export async function sync(): Promise<{ indexedTo: bigint; head: bigint; added: number }> {
   const head = await publicClient.getBlockNumber();
-  const cursorRow = must<{ last_block: number } | null>(await db().from("sh_sync").select("last_block").eq("id", SYNC_ID).maybeSingle(), "sh_sync");
+  const [cursorRow] = (await sql()`select last_block from sh_sync where id = ${SYNC_ID}`) as { last_block: string }[];
   let from = cursorRow ? BigInt(cursorRow.last_block) + 1n : deployBlock;
   let added = 0;
 
@@ -59,14 +59,18 @@ export async function sync(): Promise<{ indexedTo: bigint; head: bigint; added: 
           args,
         };
       });
-      must(await db().from("sh_events").upsert(rows, { onConflict: "tx_hash,log_index" }), "sh_events upsert");
+      for (const r of rows) {
+        await sql()`
+          insert into sh_events (tx_hash, log_index, block_number, block_time, name, house_id, ticket_id, args)
+          values (${r.tx_hash}, ${r.log_index}, ${r.block_number}, ${r.block_time}, ${r.name}, ${r.house_id}, ${r.ticket_id}, ${JSON.stringify(r.args)}::jsonb)
+          on conflict (tx_hash, log_index) do nothing`;
+      }
       added += rows.length;
     }
 
-    must(
-      await db().from("sh_sync").upsert({ id: SYNC_ID, last_block: Number(to), updated_at: new Date().toISOString() }),
-      "sh_sync upsert",
-    );
+    await sql()`
+      insert into sh_sync (id, last_block, updated_at) values (${SYNC_ID}, ${Number(to)}, now())
+      on conflict (id) do update set last_block = excluded.last_block, updated_at = now()`;
     from = to + 1n;
   }
 
@@ -76,7 +80,7 @@ export async function sync(): Promise<{ indexedTo: bigint; head: bigint; added: 
 /** Syncs only if the index is more than `maxAgeMs` old, so page loads stay fast. */
 export async function syncIfStale(maxAgeMs = 15_000) {
   try {
-    const row = must<{ updated_at: string } | null>(await db().from("sh_sync").select("updated_at").eq("id", SYNC_ID).maybeSingle(), "sh_sync");
+    const [row] = (await sql()`select updated_at from sh_sync where id = ${SYNC_ID}`) as { updated_at: string }[];
     if (row && Date.now() - new Date(row.updated_at).getTime() < maxAgeMs) return;
     await sync();
   } catch (err) {
@@ -85,22 +89,21 @@ export async function syncIfStale(maxAgeMs = 15_000) {
   }
 }
 
+const asEvents = (rows: unknown) =>
+  (rows as IndexedEvent[]).map((r) => ({ ...r, block_number: Number(r.block_number), block_time: r.block_time ? new Date(r.block_time).toISOString() : null }));
+
 export async function eventsForTicket(ticketId: number): Promise<IndexedEvent[]> {
-  return must(
-    await db().from("sh_events").select("*").eq("ticket_id", ticketId).order("block_number").order("log_index"),
-    "sh_events",
-  );
+  return asEvents(await sql()`select * from sh_events where ticket_id = ${ticketId} order by block_number, log_index`);
 }
 
 export async function eventsForHouse(houseId: number, names?: string[]): Promise<IndexedEvent[]> {
-  let q = db().from("sh_events").select("*").eq("house_id", houseId);
-  if (names) q = q.in("name", names);
-  return must(await q.order("block_number").order("log_index"), "sh_events");
+  return asEvents(
+    names
+      ? await sql()`select * from sh_events where house_id = ${houseId} and name = any(${names}) order by block_number, log_index`
+      : await sql()`select * from sh_events where house_id = ${houseId} order by block_number, log_index`,
+  );
 }
 
 export async function eventsByName(names: string[], limit = 500): Promise<IndexedEvent[]> {
-  return must(
-    await db().from("sh_events").select("*").in("name", names).order("block_number", { ascending: false }).limit(limit),
-    "sh_events",
-  );
+  return asEvents(await sql()`select * from sh_events where name = any(${names}) order by block_number desc limit ${limit}`);
 }

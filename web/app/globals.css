@@ -1,54 +1,65 @@
 @import "tailwindcss";
 
-/* Scalehouse: a public ledger on paper. Ink on a warm sheet, ruled lines, and three stamp
-   colors that mean the same thing everywhere: green = paid, red = frozen, amber = waiting. */
+/*
+  Scalehouse design system.
+  Paper and ink from Aesop (cream #FFFEF2, charcoal), money colors from Wise (forest #163300,
+  lime #9FE870), structure and motion from Column (two-tone headlines, dot grids, mono figures,
+  slow eased reveals). Three stamp colors mean the same thing everywhere:
+  lime/forest = paid, red = frozen, bronze = waiting.
+*/
 :root {
-  --paper: #f3eee3;
-  --sheet: #fbf8f1;
-  --rule: #d9d0bd;
-  --ink: #1d1b17;
-  --ink-soft: #5b554a;
-  --paid: #1f6b45;
-  --paid-wash: #e2efe6;
-  --frozen: #b0261d;
-  --frozen-wash: #f6e1dc;
-  --waiting: #9a6a00;
-  --waiting-wash: #f5ead0;
-  --void: #7a7468;
-  --accent: #1d1b17;
-}
+  color-scheme: light;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #151412;
-    --sheet: #1c1b18;
-    --rule: #34312b;
-    --ink: #f0ebe0;
-    --ink-soft: #a9a294;
-    --paid: #5cc58d;
-    --paid-wash: #17281e;
-    --frozen: #ff7a6b;
-    --frozen-wash: #2e1814;
-    --waiting: #e6b44a;
-    --waiting-wash: #2b2312;
-    --void: #8d877b;
-    --accent: #f0ebe0;
-  }
+  --paper: #fffef2;
+  --paper-2: #f6f5e8;
+  --sheet: #ffffff;
+  --rule: #e4e1cf;
+  --rule-strong: #cfcbb4;
+
+  --ink: #1b1b18;
+  --ink-2: #333333;
+  --muted: #7c7f88;
+  --faint: #a9acb6;
+
+  --forest: #163300;
+  --forest-2: #223d0d;
+  --lime: #9fe870;
+  --lime-wash: #e2f6d5;
+
+  --bronze: #945c26;
+  --bronze-wash: #f4ead9;
+  --red: #ca432f;
+  --red-wash: #f8e3dd;
+
+  --night: #12160f;
+  --night-2: #1d2219;
+
+  --ease-reveal: cubic-bezier(0.1, 0, 0.1, 1);
+  --ease-inout: cubic-bezier(0.76, 0, 0.24, 1);
+  --ring: 0 0 0 1px rgba(27, 27, 24, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04);
+  --lift: 0 0 0 1px rgba(27, 27, 24, 0.06), 0 24px 48px -12px rgba(30, 30, 20, 0.18);
 }
 
 @theme inline {
   --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
   --color-sheet: var(--sheet);
   --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
   --color-ink: var(--ink);
-  --color-ink-soft: var(--ink-soft);
-  --color-paid: var(--paid);
-  --color-paid-wash: var(--paid-wash);
-  --color-frozen: var(--frozen);
-  --color-frozen-wash: var(--frozen-wash);
-  --color-waiting: var(--waiting);
-  --color-waiting-wash: var(--waiting-wash);
-  --color-void: var(--void);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-forest: var(--forest);
+  --color-forest-2: var(--forest-2);
+  --color-lime: var(--lime);
+  --color-lime-wash: var(--lime-wash);
+  --color-bronze: var(--bronze);
+  --color-bronze-wash: var(--bronze-wash);
+  --color-red: var(--red);
+  --color-red-wash: var(--red-wash);
+  --color-night: var(--night);
+  --color-night-2: var(--night-2);
   --font-serif: var(--font-display);
   --font-sans: var(--font-body);
   --font-mono: var(--font-figures);
@@ -56,97 +67,350 @@
 
 html {
   background: var(--paper);
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-body), system-ui, sans-serif;
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
 }
 
-.sheet {
-  background: var(--sheet);
-  border: 1px solid var(--rule);
+::selection {
+  background: var(--lime);
+  color: var(--forest);
+}
+
+/* ---------- type ---------- */
+
+.display {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.02;
+}
+
+/* Column's two-tone headline: the claim in ink, the rest in grey. */
+.two-tone {
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+}
+.two-tone em {
+  font-style: normal;
+  color: var(--muted);
+}
+
+.eyebrow {
+  font-family: var(--font-figures), ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bronze);
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.55rem;
   border-radius: 4px;
+  font-family: var(--font-figures), ui-monospace, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--bronze-wash);
+  color: var(--bronze);
+}
+
+.figure {
+  font-family: var(--font-figures), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* ---------- surfaces ---------- */
+
+.card {
+  background: var(--sheet);
+  border-radius: 12px;
+  box-shadow: var(--ring);
+}
+
+.tile {
+  background: var(--paper-2);
+  border-radius: 32px;
 }
 
 .ruled > * + * {
   border-top: 1px solid var(--rule);
 }
 
-.figure {
-  font-family: var(--font-figures), ui-monospace, monospace;
-  font-variant-numeric: tabular-nums;
+.dots {
+  background-image: radial-gradient(rgba(27, 27, 24, 0.13) 1px, transparent 1.2px);
+  background-size: 14px 14px;
+}
+.dots-fade {
+  -webkit-mask-image: radial-gradient(ellipse at 70% 40%, #000 0%, transparent 70%);
+  mask-image: radial-gradient(ellipse at 70% 40%, #000 0%, transparent 70%);
+}
+.dots-lime {
+  background-image: radial-gradient(rgba(159, 232, 112, 0.28) 1px, transparent 1.2px);
+  background-size: 14px 14px;
 }
 
-.stamp {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.1rem 0.5rem;
-  border: 1.5px solid currentColor;
-  border-radius: 3px;
-  font-family: var(--font-figures), ui-monospace, monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
+/* ---------- controls ---------- */
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.6rem 1rem;
-  border-radius: 4px;
+  height: 2.75rem;
+  padding: 0 1.25rem;
+  border-radius: 999px;
   font-weight: 600;
-  font-size: 0.9rem;
-  background: var(--ink);
-  color: var(--paper);
-  border: 1px solid var(--ink);
-  transition: opacity 0.15s;
+  font-size: 0.92rem;
+  background: var(--forest);
+  color: var(--lime);
+  border: 1px solid var(--forest);
+  transition:
+    transform 0.2s var(--ease-inout),
+    background-color 0.25s ease-out,
+    opacity 0.2s;
 }
 .btn:hover {
-  opacity: 0.85;
+  background: var(--forest-2);
+  transform: translateY(-1px);
+}
+.btn:active {
+  transform: translateY(0) scale(0.98);
 }
 .btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+  transform: none;
 }
 .btn-quiet {
   background: transparent;
   color: var(--ink);
-  border-color: var(--rule);
+  border-color: var(--rule-strong);
+}
+.btn-quiet:hover {
+  background: var(--sheet);
+}
+.btn-lime {
+  background: var(--lime);
+  color: var(--forest);
+  border-color: var(--lime);
+}
+.btn-lime:hover {
+  background: #b3f08b;
 }
 
 .field {
   width: 100%;
-  padding: 0.55rem 0.7rem;
-  border: 1px solid var(--rule);
-  border-radius: 4px;
-  background: var(--paper);
+  height: 2.9rem;
+  padding: 0 0.95rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: 10px;
+  background: var(--sheet);
   color: var(--ink);
-  font-size: 0.95rem;
+  font-size: 0.97rem;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+textarea.field {
+  height: auto;
+  padding: 0.7rem 0.95rem;
+}
+select.field {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 52%,
+    calc(100% - 13px) 52%;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
 }
 .field:focus {
-  outline: 2px solid var(--ink);
-  outline-offset: 1px;
+  outline: none;
+  border-color: var(--forest);
+  box-shadow: 0 0 0 3px rgba(159, 232, 112, 0.45);
 }
 
 .label {
   display: block;
   font-size: 0.8rem;
   font-weight: 600;
-  margin-bottom: 0.3rem;
-  color: var(--ink-soft);
+  margin-bottom: 0.4rem;
+  color: var(--ink-2);
+}
+
+/* Wise's segmented pill toggle. */
+.segmented {
+  display: inline-flex;
+  padding: 4px;
+  gap: 2px;
+  border-radius: 999px;
+  background: var(--lime-wash);
+}
+.segmented > * {
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--forest);
+  transition:
+    background-color 0.25s ease-out,
+    color 0.25s ease-out;
+}
+.segmented > [aria-current="true"] {
+  background: var(--forest);
+  color: var(--lime);
+}
+
+/* Aesop's underlined category tabs. */
+.tabs {
+  display: flex;
+  gap: 1.75rem;
+  border-bottom: 1px solid var(--rule);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tabs > * {
+  padding: 0.75rem 0;
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  white-space: nowrap;
+  transition:
+    color 0.25s ease-out,
+    border-color 0.25s ease-out;
+}
+.tabs > *:hover {
+  color: var(--ink);
+}
+.tabs > [aria-current="true"] {
+  color: var(--ink);
+  border-color: var(--ink);
 }
 
 a.link {
   text-decoration: underline;
   text-underline-offset: 3px;
-  text-decoration-color: var(--rule);
+  text-decoration-color: var(--rule-strong);
+  transition: text-decoration-color 0.25s ease-out;
 }
 a.link:hover {
   text-decoration-color: var(--ink);
+}
+
+/* ---------- motion ---------- */
+
+/* Column's reveal: rise, unblur, fade in. Applied by <Reveal>. */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  filter: blur(6px);
+  transition:
+    opacity 1.2s var(--ease-reveal),
+    transform 1.2s var(--ease-reveal),
+    filter 1.2s var(--ease-reveal);
+}
+.reveal[data-shown="true"] {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+/* Wise's endless strip; pausable. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 48s linear infinite;
+}
+.marquee[data-paused="true"] .marquee-track,
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+.caret::after {
+  content: "";
+  display: inline-block;
+  width: 0.5ch;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.12em;
+  background: currentColor;
+  animation: blink 1s steps(1) infinite;
+}
+
+@keyframes stamp-in {
+  0% {
+    opacity: 0;
+    transform: scale(1.6) rotate(-8deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.94) rotate(-3deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(-3deg);
+  }
+}
+.stamp-in {
+  animation: stamp-in 0.6s var(--ease-inout) both;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(159, 232, 112, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(159, 232, 112, 0);
+  }
+}
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--lime);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+  .marquee-track,
+  .caret::after,
+  .stamp-in,
+  .live-dot {
+    animation: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
 }

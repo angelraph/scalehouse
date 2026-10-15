@@ -1,7 +1,7 @@
 import "server-only";
 import type { Address } from "viem";
 import { readTickets } from "./chain";
-import { db, must } from "./db";
+import { sql } from "./db";
 import { eventsForHouse } from "./indexer";
 import type { ReasonName, Ticket } from "./types";
 import { REASON } from "./types";
@@ -54,10 +54,7 @@ export async function houseName(houseId: number): Promise<string> {
 }
 
 export async function labels(houseId: number): Promise<Map<string, string>> {
-  const rows = must(await db().from("sh_labels").select("address,label").eq("house_id", houseId), "sh_labels") as {
-    address: string;
-    label: string;
-  }[];
+  const rows = (await sql()`select address, label from sh_labels where house_id = ${houseId}`) as { address: string; label: string }[];
   return new Map(rows.map((r) => [r.address.toLowerCase(), r.label]));
 }
 

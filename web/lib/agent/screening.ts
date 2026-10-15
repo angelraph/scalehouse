@@ -1,7 +1,7 @@
 import "server-only";
 import type { Address } from "viem";
 import { isUsdcBlocklisted } from "../chain";
-import { db, must } from "../db";
+import { sql } from "../db";
 import type { House } from "../types";
 
 export type Risk = "clear" | "elevated" | "blocked" | "unavailable";
@@ -28,10 +28,11 @@ const MAX_AGE_MS = 24 * 60 * 60 * 1000;
 export async function screen(house: House, address: Address, force = false): Promise<Screening> {
   const key = address.toLowerCase();
   if (!force) {
-    const cached = must<{ risk: Risk; screened_at: string; result: Screening } | null>(
-      await db().from("sh_screenings").select("*").eq("house_id", house.id).eq("address", key).maybeSingle(),
-      "sh_screenings",
-    );
+    const [cached] = (await sql()`select risk, screened_at, result from sh_screenings where house_id = ${house.id} and address = ${key}`) as {
+      risk: Risk;
+      screened_at: string;
+      result: Screening;
+    }[];
     if (cached && cached.risk !== "unavailable" && Date.now() - new Date(cached.screened_at).getTime() < MAX_AGE_MS) {
       return cached.result as Screening;
     }
@@ -73,9 +74,9 @@ export async function screen(house: House, address: Address, force = false): Pro
   }
 
   const result: Screening = { address, risk, checks, screenedAt: new Date().toISOString() };
-  must(
-    await db().from("sh_screenings").upsert({ house_id: house.id, address: key, result, risk, screened_at: result.screenedAt }),
-    "sh_screenings upsert",
-  );
+  await sql()`
+    insert into sh_screenings (house_id, address, result, risk, screened_at)
+    values (${house.id}, ${key}, ${JSON.stringify(result)}::jsonb, ${risk}, ${result.screenedAt})
+    on conflict (house_id, address) do update set result = excluded.result, risk = excluded.risk, screened_at = excluded.screened_at`;
   return result;
 }

@@ -1,33 +1,37 @@
 import "server-only";
-import type Anthropic from "@anthropic-ai/sdk";
+import type OpenAI from "openai";
 import { decodeEventLog, getAddress, isAddress, keccak256, toBytes, type Address, type Hex, type TransactionReceipt } from "viem";
 import { scaleTicketAbi } from "../abi";
 import { effectivePayeeCap, housePosition } from "../chain";
 import { grossOf, money, qty } from "../format";
 import { freezeReasons, houseTickets, labels } from "../house";
-import { db, must } from "../db";
+import { sql } from "../db";
 import { REASON, REASON_TEXT, type House, type Ticket } from "../types";
 import { attachTx, saveRationale, type RationaleKind } from "./rationale";
 import { screen, type Screening } from "./screening";
 import { agentSigner } from "./signer";
 
-export const AGENT_MODEL = "claude-opus-5-5";
+/** Set OPENAI_MODEL to choose the model; the agent needs one that supports strict function tools. */
+export const AGENT_MODEL = process.env.OPENAI_MODEL || "gpt-5";
 
-/** Strict tools: inputs are schema-validated by the API before they reach this code. */
-export const TOOLS: Anthropic.Beta.BetaTool[] = [
+interface ToolDef {
+  name: string;
+  description: string;
+  input_schema: Record<string, unknown>;
+}
+
+const DEFS: ToolDef[] = [
   {
     name: "get_position",
     description:
       "The house's money right now: the paying wallet's balance and the allowance it granted Scalehouse, how much has been paid today against the daily cap, what is still spendable today, and the total of tickets waiting to be paid. Read this before deciding what to pay.",
     input_schema: { type: "object", properties: {}, required: [], additionalProperties: false },
-    strict: true,
   },
   {
     name: "list_payable_tickets",
     description:
       "Every confirmed ticket in this house that has not been paid yet: who it pays, what for, the quantity the witness confirmed, the posted unit price, the amount the contract will pay, how long it has waited, and the evidence note. Also lists open (unconfirmed) and frozen tickets for context; only confirmed tickets can be released.",
     input_schema: { type: "object", properties: {}, required: [], additionalProperties: false },
-    strict: true,
   },
   {
     name: "get_counterparty",
@@ -39,7 +43,6 @@ export const TOOLS: Anthropic.Beta.BetaTool[] = [
       required: ["address"],
       additionalProperties: false,
     },
-    strict: true,
   },
   {
     name: "screen_counterparty",
@@ -51,7 +54,6 @@ export const TOOLS: Anthropic.Beta.BetaTool[] = [
       required: ["address"],
       additionalProperties: false,
     },
-    strict: true,
   },
   {
     name: "release_ticket",
@@ -68,7 +70,6 @@ export const TOOLS: Anthropic.Beta.BetaTool[] = [
       required: ["ticket_id", "payee", "amount_units", "rationale"],
       additionalProperties: false,
     },
-    strict: true,
   },
   {
     name: "defer_ticket",
@@ -80,7 +81,6 @@ export const TOOLS: Anthropic.Beta.BetaTool[] = [
       required: ["ticket_id", "rationale"],
       additionalProperties: false,
     },
-    strict: true,
   },
   {
     name: "flag_ticket",
@@ -92,7 +92,6 @@ export const TOOLS: Anthropic.Beta.BetaTool[] = [
       required: ["ticket_id", "rationale"],
       additionalProperties: false,
     },
-    strict: true,
   },
   {
     name: "lower_payee_cap",
@@ -108,9 +107,14 @@ export const TOOLS: Anthropic.Beta.BetaTool[] = [
       required: ["payee", "cap_units", "rationale"],
       additionalProperties: false,
     },
-    strict: true,
   },
 ];
+
+/** Strict function tools: the API guarantees arguments match the schema before they reach this code. */
+export const TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = DEFS.map((d) => ({
+  type: "function",
+  function: { name: d.name, description: d.description, parameters: d.input_schema, strict: true },
+}));
 
 export interface RunState {
   house: House;
@@ -172,7 +176,7 @@ async function position(house: House) {
 
 async function evidenceNotes(hashes: string[]) {
   if (!hashes.length) return new Map<string, { reference: string; note: string }>();
-  const rows = must(await db().from("sh_evidence").select("evidence_hash,reference,note").in("evidence_hash", hashes), "sh_evidence") as {
+  const rows = (await sql()`select evidence_hash, reference, note from sh_evidence where evidence_hash = any(${hashes.map((h) => h.toLowerCase())})`) as {
     evidence_hash: string;
     reference: string;
     note: string;

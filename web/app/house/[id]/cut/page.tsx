@@ -21,17 +21,17 @@ export default async function CutPage({ params }: { params: Promise<{ id: string
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <Link href={`/house/${id}`} className="link text-sm text-ink-soft">
+        <Link href={`/house/${id}`} className="link text-sm text-muted">
           {name}
         </Link>
-        <h1 className="font-serif text-4xl font-bold">Cut a ticket</h1>
-        <p className="mt-2 text-ink-soft">
+        <h1 className="display text-5xl">Cut a ticket</h1>
+        <p className="mt-2 text-muted">
           Record what arrived or what was done, and who gets paid. Once you cut it, the payee and the price are locked. A
           witness confirms the count before anything is paid.
         </p>
       </div>
       {active.length === 0 ? (
-        <div className="sheet p-6 text-ink-soft">The owner hasn&apos;t posted any prices yet. Tickets are always cut against a posted price.</div>
+        <div className="card p-6 text-muted">The owner hasn&apos;t posted any prices yet. Tickets are always cut against a posted price.</div>
       ) : (
         <CutForm
           houseId={id}

@@ -1,12 +1,13 @@
+import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getAddress, isAddress } from "viem";
 import { scaleTicketAbi } from "@/lib/abi";
 import { publicClient, readHouse, readRoles } from "@/lib/chain";
-import { db, EVIDENCE_BUCKET, must } from "@/lib/db";
+import { sql } from "@/lib/db";
 import { evidenceHash, normalizeReference } from "@/lib/format";
 import { scaleTicketAddress } from "@/lib/network";
 
-const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+const MAX_PHOTO_BYTES = 3 * 1024 * 1024;
 
 /**
  * Stores the evidence behind a ticket before it is cut, and returns the hash the issuer puts
@@ -44,34 +45,25 @@ export async function POST(req: Request) {
     return bad(`This reference from this payee is already on ticket #${existing}. The same document can't be paid twice.`, 409);
   }
 
-  let photoPath: string | null = null;
+  let photoBytes: Buffer | null = null;
+  let photoType: string | null = null;
   let photoSha: string | null = null;
   if (photo instanceof File && photo.size > 0) {
-    if (photo.size > MAX_PHOTO_BYTES) return bad("Photo must be under 5 MB");
-    if (!photo.type.startsWith("image/")) return bad("Evidence must be an image");
-    const bytes = new Uint8Array(await photo.arrayBuffer());
-    photoSha = Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex");
-    const ext = photo.type.split("/")[1]?.replace(/[^a-z0-9]/g, "") || "jpg";
-    photoPath = `${houseId}/${hash}.${ext}`;
-    must(
-      await db().storage.from(EVIDENCE_BUCKET).upload(photoPath, bytes, { contentType: photo.type, upsert: true }),
-      "evidence upload",
-    );
+    if (photo.size > MAX_PHOTO_BYTES) return bad("Photo must be under 3 MB");
+    if (!/^image\/(jpeg|png|webp|heic|heif)$/.test(photo.type)) return bad("Evidence must be a JPEG, PNG or WebP photo");
+    photoBytes = Buffer.from(await photo.arrayBuffer());
+    photoType = photo.type;
+    photoSha = createHash("sha256").update(photoBytes).digest("hex");
   }
 
-  must(
-    await db().from("sh_evidence").upsert({
-      evidence_hash: hash,
-      house_id: houseId,
-      payee,
-      reference,
-      note,
-      photo_path: photoPath,
-      photo_sha256: photoSha,
-      created_by: issuer,
-    }),
-    "sh_evidence upsert",
-  );
+  // Re-submitting before the ticket is cut (e.g. after a failed transaction) replaces the draft.
+  await sql()`
+    insert into sh_evidence (evidence_hash, house_id, payee, reference, note, photo, photo_type, photo_sha256, created_by)
+    values (${hash}, ${houseId}, ${payee}, ${reference}, ${note}, ${photoBytes}, ${photoType}, ${photoSha}, ${issuer})
+    on conflict (evidence_hash) do update set
+      house_id = excluded.house_id, payee = excluded.payee, reference = excluded.reference, note = excluded.note,
+      photo = excluded.photo, photo_type = excluded.photo_type, photo_sha256 = excluded.photo_sha256,
+      created_by = excluded.created_by, created_at = now()`;
 
   return NextResponse.json({ evidenceHash: hash });
 }
