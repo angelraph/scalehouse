@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { OwnerPanel } from "@/components/OwnerPanel";
 import { RunAgentButton } from "@/components/RunAgentButton";
+import { AgentBrief } from "@/components/AgentBrief";
 import { Stamp } from "@/components/Stamp";
 import { housePosition, readHouse } from "@/lib/chain";
 import { sql } from "@/lib/db";
@@ -21,14 +22,15 @@ interface RunRow {
   started_at: string;
 }
 
-export default async function HousePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function HousePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ new?: string }> }) {
+  const fresh = (await searchParams).new === "1";
   const id = Number((await params).id);
   if (!Number.isInteger(id) || id <= 0) notFound();
   await syncIfStale();
   const house = await readHouse(id);
   if (!house) notFound();
 
-  const [name, position, tickets, rates, team, names, frozen, runsRes] = await Promise.all([
+  const [name, position, tickets, rates, team, names, frozen, runsRes, briefRes] = await Promise.all([
     houseName(id),
     housePosition(house),
     houseTickets(id),
@@ -36,9 +38,11 @@ export default async function HousePage({ params }: { params: Promise<{ id: stri
     houseTeam(id),
     labels(id),
     freezeReasons(id),
-    sql()`select id, trigger, summary, transcript, started_at from sh_agent_runs where chain_id = ${CHAIN_ID} and house_id = ${id} order by started_at desc limit 5`.catch(() => []),
+    sql()`select id, trigger, summary, transcript, started_at from sh_agent_runs where chain_id = ${CHAIN_ID} and house_id = ${id} and trigger <> 'brief' order by started_at desc limit 5`.catch(() => []),
+    sql()`select summary, finished_at from sh_agent_runs where chain_id = ${CHAIN_ID} and house_id = ${id} and trigger = 'brief' order by started_at desc limit 1`.catch(() => []),
   ]);
   const runs = runsRes as RunRow[];
+  const brief = (briefRes as { summary: string; finished_at: string }[])[0] ?? null;
   const symbol = tokenSymbol(house.token);
   const agentAppointed = house.agent.toLowerCase() === agentAddress.toLowerCase();
   const label = (a: string) => names.get(a.toLowerCase()) ?? short(a);
@@ -68,6 +72,20 @@ export default async function HousePage({ params }: { params: Promise<{ id: stri
           {agentAppointed && <RunAgentButton houseId={id} />}
         </div>
       </div>
+
+      {fresh && (
+        <div className="card flex flex-wrap items-center justify-between gap-3 border-l-4 border-forest p-5">
+          <div>
+            <div className="font-semibold">Your house is ready.</div>
+            <p className="text-sm text-muted">Next: the recorder cuts the first ticket, then sends it to the confirmer. The agent pays the moment it&apos;s confirmed.</p>
+          </div>
+          <Link href={`/house/${id}/cut`} className="btn">
+            Cut the first ticket →
+          </Link>
+        </div>
+      )}
+
+      {agentAppointed && <AgentBrief houseId={id} initial={brief?.summary ?? null} at={brief?.finished_at ?? null} />}
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Figure label="Wallet balance" value={money(position.balance, symbol)} />

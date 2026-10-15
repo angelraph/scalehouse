@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Stamp } from "@/components/Stamp";
 import { WitnessPanel } from "@/components/WitnessPanel";
+import { ShareConfirm } from "@/components/ShareConfirm";
 import { readHouse, readTicket } from "@/lib/chain";
 import { evidencePhotoUrl, sql } from "@/lib/db";
 import { grossOf, money, qty, short } from "@/lib/format";
@@ -57,6 +58,13 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
         <Stamp status={ticket.status} />
       </div>
 
+      {ticket.status === "Open" && (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <WitnessPanel ticketId={id} houseId={ticket.houseId} claimed={ticket.quantity.toString()} payee={ticket.payee} evidenceHash={ticket.evidenceHash} />
+          <ShareConfirm ticketId={id} what={ev?.note || ev?.reference || `${qty(ticket.quantity)} units`} amount={money(grossOf(ticket.quantity, ticket.unitPrice), symbol)} />
+        </div>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
         <div className="space-y-6">
           <dl className="card ruled text-sm">
@@ -89,7 +97,6 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
             <p className="figure mt-3 break-all text-xs text-muted">hash {ticket.evidenceHash}</p>
           </div>
 
-          {ticket.status === "Open" && <WitnessPanel ticketId={id} houseId={ticket.houseId} claimed={ticket.quantity.toString()} payee={ticket.payee} evidenceHash={ticket.evidenceHash} />}
         </div>
 
         <div className="card p-5">
