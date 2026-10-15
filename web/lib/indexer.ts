@@ -3,7 +3,7 @@ import { parseEventLogs } from "viem";
 import { scaleTicketAbi } from "./abi";
 import { publicClient } from "./chain";
 import { sql } from "./db";
-import { deployBlock, scaleTicketAddress } from "./network";
+import { CHAIN_ID, deployBlock, scaleTicketAddress } from "./network";
 
 // Arc's public RPC caps eth_getLogs at 5,000 blocks (~40 minutes at ~0.5s blocks).
 const CHUNK = BigInt(process.env.LOG_CHUNK_BLOCKS ?? "5000");
@@ -61,9 +61,9 @@ export async function sync(): Promise<{ indexedTo: bigint; head: bigint; added: 
       });
       for (const r of rows) {
         await sql()`
-          insert into sh_events (tx_hash, log_index, block_number, block_time, name, house_id, ticket_id, args)
-          values (${r.tx_hash}, ${r.log_index}, ${r.block_number}, ${r.block_time}, ${r.name}, ${r.house_id}, ${r.ticket_id}, ${JSON.stringify(r.args)}::jsonb)
-          on conflict (tx_hash, log_index) do nothing`;
+          insert into sh_events (chain_id, tx_hash, log_index, block_number, block_time, name, house_id, ticket_id, args)
+          values (${CHAIN_ID}, ${r.tx_hash}, ${r.log_index}, ${r.block_number}, ${r.block_time}, ${r.name}, ${r.house_id}, ${r.ticket_id}, ${JSON.stringify(r.args)}::jsonb)
+          on conflict (chain_id, tx_hash, log_index) do nothing`;
       }
       added += rows.length;
     }
@@ -93,17 +93,17 @@ const asEvents = (rows: unknown) =>
   (rows as IndexedEvent[]).map((r) => ({ ...r, block_number: Number(r.block_number), block_time: r.block_time ? new Date(r.block_time).toISOString() : null }));
 
 export async function eventsForTicket(ticketId: number): Promise<IndexedEvent[]> {
-  return asEvents(await sql()`select * from sh_events where ticket_id = ${ticketId} order by block_number, log_index`);
+  return asEvents(await sql()`select * from sh_events where chain_id = ${CHAIN_ID} and ticket_id = ${ticketId} order by block_number, log_index`);
 }
 
 export async function eventsForHouse(houseId: number, names?: string[]): Promise<IndexedEvent[]> {
   return asEvents(
     names
-      ? await sql()`select * from sh_events where house_id = ${houseId} and name = any(${names}) order by block_number, log_index`
-      : await sql()`select * from sh_events where house_id = ${houseId} order by block_number, log_index`,
+      ? await sql()`select * from sh_events where chain_id = ${CHAIN_ID} and house_id = ${houseId} and name = any(${names}) order by block_number, log_index`
+      : await sql()`select * from sh_events where chain_id = ${CHAIN_ID} and house_id = ${houseId} order by block_number, log_index`,
   );
 }
 
 export async function eventsByName(names: string[], limit = 500): Promise<IndexedEvent[]> {
-  return asEvents(await sql()`select * from sh_events where name = any(${names}) order by block_number desc limit ${limit}`);
+  return asEvents(await sql()`select * from sh_events where chain_id = ${CHAIN_ID} and name = any(${names}) order by block_number desc limit ${limit}`);
 }

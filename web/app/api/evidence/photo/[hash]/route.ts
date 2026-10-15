@@ -1,10 +1,11 @@
 import { sql } from "@/lib/db";
+import { CHAIN_ID } from "@/lib/network";
 
 /** Serves an evidence photo. Photos are public by design: the cut form says so. */
 export async function GET(_req: Request, { params }: { params: Promise<{ hash: string }> }) {
   const { hash } = await params;
   if (!/^0x[0-9a-f]{64}$/.test(hash)) return new Response("Not found", { status: 404 });
-  const [row] = (await sql()`select photo, photo_type from sh_evidence where evidence_hash = ${hash} and photo is not null`) as {
+  const [row] = (await sql()`select photo, photo_type from sh_evidence where chain_id = ${CHAIN_ID} and evidence_hash = ${hash} and photo is not null`) as {
     photo: Buffer | string;
     photo_type: string;
   }[];

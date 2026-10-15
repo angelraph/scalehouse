@@ -7,7 +7,7 @@ import { evidencePhotoUrl, sql } from "@/lib/db";
 import { grossOf, money, qty, short } from "@/lib/format";
 import { houseName, labels } from "@/lib/house";
 import { eventsForTicket, syncIfStale, type IndexedEvent } from "@/lib/indexer";
-import { explorerAddress, explorerTx, tokenSymbol } from "@/lib/network";
+import { CHAIN_ID, explorerAddress, explorerTx, tokenSymbol } from "@/lib/network";
 import { verifyRationale } from "@/lib/agent/rationale";
 import { REASON, REASON_TEXT } from "@/lib/types";
 
@@ -33,8 +33,8 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
     readHouse(ticket.houseId),
     houseName(ticket.houseId),
     eventsForTicket(id),
-    sql()`select reference, note, (photo is not null) as has_photo from sh_evidence where evidence_hash = ${ticket.evidenceHash.toLowerCase()}`.catch(() => []),
-    sql()`select * from sh_rationales where ticket_id = ${id} order by created_at`.catch(() => []),
+    sql()`select reference, note, (photo is not null) as has_photo from sh_evidence where chain_id = ${CHAIN_ID} and evidence_hash = ${ticket.evidenceHash.toLowerCase()}`.catch(() => []),
+    sql()`select * from sh_rationales where chain_id = ${CHAIN_ID} and ticket_id = ${id} order by created_at`.catch(() => []),
     labels(ticket.houseId),
   ]);
   const ev = (evidence as { reference: string; note: string; has_photo: boolean }[])[0] ?? null;

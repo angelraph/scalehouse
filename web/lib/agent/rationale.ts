@@ -2,6 +2,7 @@ import "server-only";
 import { keccak256, toBytes, type Hex } from "viem";
 import { canonicalJson } from "../format";
 import { sql } from "../db";
+import { CHAIN_ID } from "../network";
 
 export type RationaleKind = "RELEASE" | "DEFER" | "FLAG" | "CAP";
 
@@ -20,14 +21,14 @@ export async function saveRationale(input: {
   const json = canonicalJson(input.body);
   const hash = keccak256(toBytes(json));
   await sql()`
-    insert into sh_rationales (rationale_hash, house_id, ticket_id, kind, model, rationale)
-    values (${hash}, ${input.houseId}, ${input.ticketId}, ${input.kind}, ${input.model}, ${json})
-    on conflict (rationale_hash) do nothing`;
+    insert into sh_rationales (chain_id, rationale_hash, house_id, ticket_id, kind, model, rationale)
+    values (${CHAIN_ID}, ${hash}, ${input.houseId}, ${input.ticketId}, ${input.kind}, ${input.model}, ${json})
+    on conflict (chain_id, rationale_hash) do nothing`;
   return hash;
 }
 
 export async function attachTx(hash: Hex, txHash: Hex) {
-  await sql()`update sh_rationales set tx_hash = ${txHash} where rationale_hash = ${hash}`;
+  await sql()`update sh_rationales set tx_hash = ${txHash} where chain_id = ${CHAIN_ID} and rationale_hash = ${hash}`;
 }
 
 export function verifyRationale(row: { rationale_hash: string; rationale: string }): boolean {

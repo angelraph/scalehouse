@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { sql } from "@/lib/db";
+import { CHAIN_ID } from "@/lib/network";
 import { runAgent } from "@/lib/agent/run";
 
 export const maxDuration = 300;
@@ -14,7 +15,7 @@ export async function POST(req: Request) {
   const { houseId } = (await req.json().catch(() => ({}))) as { houseId?: number };
   if (!houseId || !Number.isInteger(houseId)) return NextResponse.json({ error: "houseId required" }, { status: 400 });
 
-  const last = (await sql()`select started_at from sh_agent_runs where house_id = ${houseId} order by started_at desc limit 1`) as { started_at: string }[];
+  const last = (await sql()`select started_at from sh_agent_runs where chain_id = ${CHAIN_ID} and house_id = ${houseId} order by started_at desc limit 1`) as { started_at: string }[];
   if (last[0] && Date.now() - new Date(last[0].started_at).getTime() < MIN_GAP_MS) {
     return NextResponse.json({ error: "The agent just ran for this house. Try again in a minute." }, { status: 429 });
   }

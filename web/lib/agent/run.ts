@@ -2,6 +2,7 @@ import "server-only";
 import OpenAI from "openai";
 import { readHouse } from "../chain";
 import { sql } from "../db";
+import { CHAIN_ID } from "../network";
 import { houseName } from "../house";
 import { syncIfStale } from "../indexer";
 import { AGENT_MODEL, TOOLS, runTool, type RunState } from "./tools";
@@ -50,7 +51,7 @@ export async function runAgent(houseId: number, trigger: string): Promise<RunRes
   const name = await houseName(houseId);
 
   const [run] = (await sql()`
-    insert into sh_agent_runs (house_id, trigger, model) values (${houseId}, ${trigger}, ${AGENT_MODEL}) returning id`) as { id: number }[];
+    insert into sh_agent_runs (chain_id, house_id, trigger, model) values (${CHAIN_ID}, ${houseId}, ${trigger}, ${AGENT_MODEL}) returning id`) as { id: number }[];
 
   const state: RunState = { house, screened: new Map(), actions: [] };
   const client = new OpenAI();

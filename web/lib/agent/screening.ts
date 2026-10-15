@@ -2,6 +2,7 @@ import "server-only";
 import type { Address } from "viem";
 import { isUsdcBlocklisted } from "../chain";
 import { sql } from "../db";
+import { CHAIN_ID } from "../network";
 import type { House } from "../types";
 
 export type Risk = "clear" | "elevated" | "blocked" | "unavailable";
@@ -28,7 +29,7 @@ const MAX_AGE_MS = 24 * 60 * 60 * 1000;
 export async function screen(house: House, address: Address, force = false): Promise<Screening> {
   const key = address.toLowerCase();
   if (!force) {
-    const [cached] = (await sql()`select risk, screened_at, result from sh_screenings where house_id = ${house.id} and address = ${key}`) as {
+    const [cached] = (await sql()`select risk, screened_at, result from sh_screenings where chain_id = ${CHAIN_ID} and house_id = ${house.id} and address = ${key}`) as {
       risk: Risk;
       screened_at: string;
       result: Screening;
@@ -75,8 +76,8 @@ export async function screen(house: House, address: Address, force = false): Pro
 
   const result: Screening = { address, risk, checks, screenedAt: new Date().toISOString() };
   await sql()`
-    insert into sh_screenings (house_id, address, result, risk, screened_at)
-    values (${house.id}, ${key}, ${JSON.stringify(result)}::jsonb, ${risk}, ${result.screenedAt})
-    on conflict (house_id, address) do update set result = excluded.result, risk = excluded.risk, screened_at = excluded.screened_at`;
+    insert into sh_screenings (chain_id, house_id, address, result, risk, screened_at)
+    values (${CHAIN_ID}, ${house.id}, ${key}, ${JSON.stringify(result)}::jsonb, ${risk}, ${result.screenedAt})
+    on conflict (chain_id, house_id, address) do update set result = excluded.result, risk = excluded.risk, screened_at = excluded.screened_at`;
   return result;
 }

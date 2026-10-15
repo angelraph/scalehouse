@@ -6,6 +6,7 @@ import { effectivePayeeCap, housePosition } from "../chain";
 import { grossOf, money, qty } from "../format";
 import { freezeReasons, houseTickets, labels } from "../house";
 import { sql } from "../db";
+import { CHAIN_ID } from "../network";
 import { REASON, REASON_TEXT, type House, type Ticket } from "../types";
 import { attachTx, saveRationale, type RationaleKind } from "./rationale";
 import { screen, type Screening } from "./screening";
@@ -176,7 +177,7 @@ async function position(house: House) {
 
 async function evidenceNotes(hashes: string[]) {
   if (!hashes.length) return new Map<string, { reference: string; note: string }>();
-  const rows = (await sql()`select evidence_hash, reference, note from sh_evidence where evidence_hash = any(${hashes.map((h) => h.toLowerCase())})`) as {
+  const rows = (await sql()`select evidence_hash, reference, note from sh_evidence where chain_id = ${CHAIN_ID} and evidence_hash = any(${hashes.map((h) => h.toLowerCase())})`) as {
     evidence_hash: string;
     reference: string;
     note: string;

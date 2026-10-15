@@ -43,6 +43,9 @@ export const network = NETWORKS[networkName];
 export const chain = network.chain;
 export const isMainnet = networkName === "mainnet";
 
+/** Every off-chain row is tagged with this, so mainnet and testnet can share one database. */
+export const CHAIN_ID = network.chain.id;
+
 export const scaleTicketAddress = (process.env.NEXT_PUBLIC_SCALETICKET_ADDRESS ?? "") as Address;
 export const deployBlock = BigInt(process.env.NEXT_PUBLIC_DEPLOY_BLOCK ?? "0");
 

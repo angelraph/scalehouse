@@ -5,12 +5,12 @@ import { chain } from "@/lib/network";
 import { short } from "@/lib/format";
 
 export function WalletButton() {
-  const { address, onRightChain, connect, disconnect, switchChain, connecting, error } = useWallet();
+  const { address, onRightChain, connect, disconnect, switchChain, connecting, error, activeName } = useWallet();
 
   if (!address) {
     return (
       <div className="flex flex-col items-end">
-        <button className="btn h-10 px-4 whitespace-nowrap sm:h-11 sm:px-5" disabled={connecting} onClick={connect}>
+        <button className="btn h-10 px-4 whitespace-nowrap sm:h-11 sm:px-5" disabled={connecting} onClick={() => connect()}>
           {connecting ? "Connecting…" : (
             <>
               Connect<span className="hidden sm:inline">wallet</span>
@@ -31,7 +31,7 @@ export function WalletButton() {
   }
 
   return (
-    <button className="btn btn-quiet figure" onClick={disconnect} title="Disconnect">
+    <button className="btn btn-quiet figure h-10 px-4 sm:h-11" onClick={disconnect} title={`${activeName ?? "Wallet"} · click to disconnect`}>
       {short(address)}
     </button>
   );

@@ -5,7 +5,7 @@ import { scaleTicketAbi } from "@/lib/abi";
 import { publicClient, readHouse, readRoles } from "@/lib/chain";
 import { sql } from "@/lib/db";
 import { evidenceHash, normalizeReference } from "@/lib/format";
-import { scaleTicketAddress } from "@/lib/network";
+import { CHAIN_ID, scaleTicketAddress } from "@/lib/network";
 
 const MAX_PHOTO_BYTES = 3 * 1024 * 1024;
 
@@ -58,9 +58,9 @@ export async function POST(req: Request) {
 
   // Re-submitting before the ticket is cut (e.g. after a failed transaction) replaces the draft.
   await sql()`
-    insert into sh_evidence (evidence_hash, house_id, payee, reference, note, photo, photo_type, photo_sha256, created_by)
-    values (${hash}, ${houseId}, ${payee}, ${reference}, ${note}, ${photoBytes}, ${photoType}, ${photoSha}, ${issuer})
-    on conflict (evidence_hash) do update set
+    insert into sh_evidence (chain_id, evidence_hash, house_id, payee, reference, note, photo, photo_type, photo_sha256, created_by)
+    values (${CHAIN_ID}, ${hash}, ${houseId}, ${payee}, ${reference}, ${note}, ${photoBytes}, ${photoType}, ${photoSha}, ${issuer})
+    on conflict (chain_id, evidence_hash) do update set
       house_id = excluded.house_id, payee = excluded.payee, reference = excluded.reference, note = excluded.note,
       photo = excluded.photo, photo_type = excluded.photo_type, photo_sha256 = excluded.photo_sha256,
       created_by = excluded.created_by, created_at = now()`;

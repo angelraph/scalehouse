@@ -8,7 +8,7 @@ import { sql } from "@/lib/db";
 import { grossOf, money, qty, short, timeAgo } from "@/lib/format";
 import { freezeReasons, houseName, houseRates, houseTeam, houseTickets, labels } from "@/lib/house";
 import { syncIfStale } from "@/lib/indexer";
-import { agentAddress, explorerAddress, explorerTx, tokenSymbol } from "@/lib/network";
+import { CHAIN_ID, agentAddress, explorerAddress, explorerTx, tokenSymbol } from "@/lib/network";
 import { REASON_TEXT } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +36,7 @@ export default async function HousePage({ params }: { params: Promise<{ id: stri
     houseTeam(id),
     labels(id),
     freezeReasons(id),
-    sql()`select id, trigger, summary, transcript, started_at from sh_agent_runs where house_id = ${id} order by started_at desc limit 5`.catch(() => []),
+    sql()`select id, trigger, summary, transcript, started_at from sh_agent_runs where chain_id = ${CHAIN_ID} and house_id = ${id} order by started_at desc limit 5`.catch(() => []),
   ]);
   const runs = runsRes as RunRow[];
   const symbol = tokenSymbol(house.token);

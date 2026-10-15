@@ -15,6 +15,7 @@ import { scaleTicketAbi } from "@/lib/abi";
 import { scaleTicketBytecode } from "@/lib/bytecode";
 import { NETWORKS } from "@/lib/network";
 import { explain } from "@/components/useTx";
+import { useWallet } from "@/components/Providers";
 
 const main = NETWORKS.mainnet.chain;
 const pub = createPublicClient({ chain: main, transport: http(main.rpcUrls.default.http[0]) });
@@ -32,20 +33,24 @@ export default function Launch() {
   const [funded, setFunded] = useState<string | null>(null);
   const [balance, setBalance] = useState<string | null>(null);
 
-  const wallet = () => createWalletClient({ account: account!, chain: main, transport: custom(window.ethereum!) });
+  const { provider, openPicker } = useWallet();
+  const wallet = () => createWalletClient({ account: account!, chain: main, transport: custom(provider()!) });
 
   async function connect() {
     setError(null);
-    const eth = window.ethereum;
-    if (!eth) return setError("No wallet found. Open this page in the browser where your wallet is installed.");
+    const p = provider();
+    if (!p) {
+      openPicker();
+      return;
+    }
     try {
-      const [a] = await eth.request({ method: "eth_requestAccounts" });
+      const [a] = await p.request({ method: "eth_requestAccounts" });
       const hexId = numberToHex(main.id);
       try {
-        await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: hexId }] });
+        await p.request({ method: "wallet_switchEthereumChain", params: [{ chainId: hexId }] });
       } catch (e) {
         if ((e as { code?: number }).code !== 4902) throw e;
-        await eth.request({
+        await p.request({
           method: "wallet_addEthereumChain",
           params: [{ chainId: hexId, chainName: main.name, nativeCurrency: main.nativeCurrency, rpcUrls: [...main.rpcUrls.default.http], blockExplorerUrls: [main.blockExplorers.default.url] }],
         });
@@ -110,7 +115,7 @@ export default function Launch() {
             </p>
           ) : (
             <button className="btn" onClick={connect}>
-              Connect wallet
+              {provider() ? "Use this wallet on Arc mainnet" : "Choose a wallet"}
             </button>
           )}
         </Step>

@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="bg-forest px-4 py-2 text-center text-xs text-lime">
             <span className="inline-flex items-center gap-2">
               <span className="live-dot" />
-              Live on {chain.name}. Every number on this site is read from the chain.
+              {isMainnet ? "Live on Arc mainnet" : "You are on Arc testnet: test money only"}. Every number here is read from the chain.
             </span>
           </div>
           <Nav testnet={!isMainnet} />
