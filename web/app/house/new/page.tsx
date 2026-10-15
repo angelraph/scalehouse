@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { encodeFunctionData, getAddress, isAddress, type Abi, type Address, type Hex } from "viem";
 import { RequireWallet } from "@/components/Wallet";
 import { FaucetButton } from "@/components/FaucetButton";
@@ -48,6 +48,17 @@ export default function NewHouse() {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [steps, setSteps] = useState<{ label: string; done: boolean }[]>([]);
+
+  // /house/new?preset=testers: sensible defaults for builders paying testers.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("preset") !== "testers") return;
+    setItem("Tester task");
+    setPrice("1");
+    setMaxTicket("2");
+    setDailyCap("10");
+    setRecorder("me");
+    setConfirmer("other");
+  }, []);
 
   const me = address?.toLowerCase();
   const clerk = recorder === "me" ? address : isAddress(recorderAddr) ? getAddress(recorderAddr) : null;

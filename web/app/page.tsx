@@ -97,9 +97,9 @@ export default async function Home() {
               <span className="italic text-forest">Paid once.</span>
             </h1>
             <p className="mt-7 max-w-xl text-lg leading-relaxed text-ink-2">
-              In most small businesses the person who counts the goods is the person who sends the money. That&apos;s how
-              suppliers get short-weighed, paid late, or paid twice. Scalehouse splits the two:{" "}
-              <span className="text-ink">an agent decides when to pay, and a contract decides what is owed and to whom.</span>
+              <span className="text-ink">Spending limits stop an AI agent overspending. They don&apos;t stop it paying the wrong person.</span>{" "}
+              Scalehouse locks every payment to its evidence: the payee is fixed when the ticket is cut, a second person counts, and a
+              contract pays once, or freezes in public.
             </p>
             <div className="mt-9 flex flex-wrap gap-3">
               <Link href="/house/new" className="btn">
@@ -184,6 +184,53 @@ export default async function Home() {
           </Reveal>
           <Reveal delay={150}>
             <LiveTicket t={toLive(hero)} network={chain.name} />
+          </Reveal>
+        </div>
+      </section>
+
+      {/* Limits vs evidence: the positioning, side by side */}
+      <section>
+        <Reveal>
+          <span className="tag">Why not just limits?</span>
+          <h2 className="two-tone mt-5 max-w-3xl text-3xl sm:text-4xl">
+            A budget answers &ldquo;how much&rdquo;. <em>Scalehouse also answers &ldquo;to whom, for what, and did it really arrive&rdquo;.</em>
+          </h2>
+        </Reveal>
+        <div className="mt-10 grid gap-4 md:grid-cols-2">
+          <Reveal className="tile p-7">
+            <div className="eyebrow !text-muted">Agent with spending limits</div>
+            <ul className="mt-4 space-y-3 text-ink-2">
+              {[
+                "Stops it spending more than $X a day",
+                "Pays any allowed wallet the agent names",
+                "Pays an invoice twice if it's presented twice",
+                "Can't tell 10 bags delivered from 12 claimed",
+              ].map((x, i) => (
+                <li key={x} className="flex gap-3">
+                  <span className={i === 0 ? "text-forest" : "text-red"}>{i === 0 ? "✓" : "✕"}</span>
+                  {x}
+                </li>
+              ))}
+            </ul>
+          </Reveal>
+          <Reveal delay={120} className="relative overflow-hidden rounded-[32px] bg-forest p-7 text-[#eaf3e6]">
+            <div className="dots-lime pointer-events-none absolute inset-0 opacity-40" />
+            <div className="relative">
+              <div className="eyebrow !text-lime">Scalehouse</div>
+              <ul className="mt-4 space-y-3">
+                {[
+                  "Daily, per-ticket and per-person limits too",
+                  "Pays only the wallet locked on the ticket",
+                  "One document, one ticket, paid once",
+                  "A second person counts; the AI reads the invoice and flags overcharges",
+                ].map((x) => (
+                  <li key={x} className="flex gap-3">
+                    <span className="text-lime">✓</span>
+                    {x}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </Reveal>
         </div>
       </section>

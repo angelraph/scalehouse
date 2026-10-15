@@ -59,7 +59,7 @@ function Footer() {
             Evidence-locked payments for the people who weigh, deliver and build. Weighed in public. Paid once.
           </p>
         </div>
-        <FooterCol title="Product" links={[["The board", "/board"], ["Open a house", "/house/new"], ["How it works", "/#how"], ["Docs", "/docs"], ["FAQ", "/faq"]]} />
+        <FooterCol title="Product" links={[["The board", "/board"], ["Open a house", "/house/new"], ["How it works", "/#how"], ["Docs", "/docs"], ["FAQ", "/faq"], ["Pay your testers", "/builders"]]} />
         <FooterCol
           title="Contract"
           links={[
