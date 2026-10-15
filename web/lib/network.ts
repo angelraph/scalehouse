@@ -2,7 +2,7 @@ import { defineChain, type Address } from "viem";
 
 // Arc mainnet and testnet. Token addresses are from docs.arc.io/arc/references/contract-addresses
 // and were checked against the live chain (USDC: symbol "USDC", 6 decimals on both).
-const NETWORKS = {
+export const NETWORKS = {
   mainnet: {
     chain: defineChain({
       id: 5042,
