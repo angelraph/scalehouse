@@ -32,7 +32,16 @@ export async function POST(req: Request) {
   const issuer = getAddress(issuerRaw);
   const house = await readHouse(houseId);
   if (!house) return bad("Unknown house");
-  if (((await readRoles(houseId, issuer)) & 1) === 0) return bad("This wallet is not a clerk in this house", 403);
+  if (((await readRoles(houseId, issuer)) & 1) === 0) {
+    const mine = issuer.toLowerCase() === house.owner.toLowerCase();
+    return bad(
+      `The connected wallet (${issuer.slice(0, 6)}…${issuer.slice(-4)}) isn't a clerk in this house. ` +
+        (mine
+          ? "You own this house: add your own address as a Clerk under Owner controls → Team, then try again."
+          : "Ask the house owner to add it as a Clerk, or connect a wallet that is one."),
+      403,
+    );
+  }
 
   const hash = evidenceHash(payee, reference);
   const existing = await publicClient.readContract({
