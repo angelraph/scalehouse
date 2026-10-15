@@ -119,21 +119,34 @@ function Row({ k, v }: { k: string; v: React.ReactNode }) {
 function Step({ e, rationale, symbol, label }: { e: IndexedEvent; rationale?: RationaleRow; symbol: string; label: (a: string) => string }) {
   const a = e.args as Record<string, string>;
   const reason = a.reason != null ? REASON[Number(a.reason)] : null;
-  const content: Record<string, { title: string; body?: string; tone: string }> = {
-    TicketCut: { title: "Ticket cut", body: `${qty(BigInt(a.quantity))} at ${money(BigInt(a.unitPrice), symbol)}, payee locked to ${label(a.payee)}`, tone: "text-ink" },
-    TicketConfirmed: {
-      title: "Witness counted",
-      body: `${label(a.witness)} counted ${qty(BigInt(a.observedQuantity))}${BigInt(a.confirmedQuantity) > 0n ? `, confirmed at ${qty(BigInt(a.confirmedQuantity))}` : ""}`,
-      tone: "text-ink",
-    },
-    TicketReleased: { title: "Paid", body: `${money(BigInt(a.gross), symbol)} to ${label(a.payee)}`, tone: "text-forest" },
-    ReleaseRefused: { title: "Payment refused", body: reason ? REASON_TEXT[reason] : undefined, tone: "text-bronze" },
-    TicketFrozen: { title: "Frozen", body: reason ? REASON_TEXT[reason] : undefined, tone: "text-red" },
-    TicketReopened: { title: "Reopened by the owner for a fresh count", tone: "text-ink" },
-    TicketVoided: { title: "Voided by the owner", tone: "text-muted" },
-    AgentDecision: { title: "Agent decision recorded", tone: "text-ink" },
+  // Built per event: each event type carries different fields.
+  const describe = (): { title: string; body?: string; tone: string } => {
+    switch (e.name) {
+      case "TicketCut":
+        return { title: "Ticket cut", body: `${qty(BigInt(a.quantity))} at ${money(BigInt(a.unitPrice), symbol)}, payee locked to ${label(a.payee)}`, tone: "text-ink" };
+      case "TicketConfirmed":
+        return {
+          title: "Witness counted",
+          body: `${label(a.witness)} counted ${qty(BigInt(a.observedQuantity))}${BigInt(a.confirmedQuantity) > 0n ? `, confirmed at ${qty(BigInt(a.confirmedQuantity))}` : ""}`,
+          tone: "text-ink",
+        };
+      case "TicketReleased":
+        return { title: "Paid", body: `${money(BigInt(a.gross), symbol)} to ${label(a.payee)}`, tone: "text-forest" };
+      case "ReleaseRefused":
+        return { title: "Payment refused", body: reason ? REASON_TEXT[reason] : undefined, tone: "text-bronze" };
+      case "TicketFrozen":
+        return { title: "Frozen", body: reason ? REASON_TEXT[reason] : undefined, tone: "text-red" };
+      case "TicketReopened":
+        return { title: "Reopened by the owner for a fresh count", tone: "text-ink" };
+      case "TicketVoided":
+        return { title: "Voided by the owner", tone: "text-muted" };
+      case "AgentDecision":
+        return { title: "Agent decision recorded", tone: "text-ink" };
+      default:
+        return { title: e.name, tone: "text-ink" };
+    }
   };
-  const c = content[e.name] ?? { title: e.name, tone: "text-ink" };
+  const c = describe();
   const r = rationale ? (JSON.parse(rationale.rationale) as Record<string, unknown>) : null;
   return (
     <li className="border-l-2 border-rule pl-4">
