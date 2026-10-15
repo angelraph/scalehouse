@@ -32,6 +32,12 @@ export async function POST(req: Request) {
   const issuer = getAddress(issuerRaw);
   const house = await readHouse(houseId);
   if (!house) return bad("Unknown house");
+  if (payee.toLowerCase() === house.owner.toLowerCase()) {
+    return bad("That's the house owner's own wallet. A house can't pay its owner: paste the wallet of the person you're paying.");
+  }
+  if (payee.toLowerCase() === house.agent.toLowerCase()) {
+    return bad("That's the Scalehouse agent's wallet. Paste the wallet of the person you're paying.");
+  }
   if (((await readRoles(houseId, issuer)) & 1) === 0) {
     const mine = issuer.toLowerCase() === house.owner.toLowerCase();
     return bad(
