@@ -8,3 +8,4 @@ contracts/broadcast/*/31337/
 .next/
 .vercel/
 *.tsbuildinfo
+.keys/

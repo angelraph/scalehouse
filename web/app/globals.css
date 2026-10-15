@@ -1,0 +1,152 @@
+@import "tailwindcss";
+
+/* Scalehouse: a public ledger on paper. Ink on a warm sheet, ruled lines, and three stamp
+   colors that mean the same thing everywhere: green = paid, red = frozen, amber = waiting. */
+:root {
+  --paper: #f3eee3;
+  --sheet: #fbf8f1;
+  --rule: #d9d0bd;
+  --ink: #1d1b17;
+  --ink-soft: #5b554a;
+  --paid: #1f6b45;
+  --paid-wash: #e2efe6;
+  --frozen: #b0261d;
+  --frozen-wash: #f6e1dc;
+  --waiting: #9a6a00;
+  --waiting-wash: #f5ead0;
+  --void: #7a7468;
+  --accent: #1d1b17;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #151412;
+    --sheet: #1c1b18;
+    --rule: #34312b;
+    --ink: #f0ebe0;
+    --ink-soft: #a9a294;
+    --paid: #5cc58d;
+    --paid-wash: #17281e;
+    --frozen: #ff7a6b;
+    --frozen-wash: #2e1814;
+    --waiting: #e6b44a;
+    --waiting-wash: #2b2312;
+    --void: #8d877b;
+    --accent: #f0ebe0;
+  }
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-sheet: var(--sheet);
+  --color-rule: var(--rule);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-paid: var(--paid);
+  --color-paid-wash: var(--paid-wash);
+  --color-frozen: var(--frozen);
+  --color-frozen-wash: var(--frozen-wash);
+  --color-waiting: var(--waiting);
+  --color-waiting-wash: var(--waiting-wash);
+  --color-void: var(--void);
+  --font-serif: var(--font-display);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-figures);
+}
+
+html {
+  background: var(--paper);
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+.sheet {
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+
+.ruled > * + * {
+  border-top: 1px solid var(--rule);
+}
+
+.figure {
+  font-family: var(--font-figures), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.1rem 0.5rem;
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+  font-family: var(--font-figures), ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  background: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--ink);
+  transition: opacity 0.15s;
+}
+.btn:hover {
+  opacity: 0.85;
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.btn-quiet {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--rule);
+}
+
+.field {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+.field:focus {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+
+.label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+  color: var(--ink-soft);
+}
+
+a.link {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--rule);
+}
+a.link:hover {
+  text-decoration-color: var(--ink);
+}
