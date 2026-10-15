@@ -5,6 +5,7 @@ import { publicClient, readHouse, readRoles, readTicket } from "@/lib/chain";
 import { agentSigner } from "@/lib/agent/signer";
 import { runAgent } from "@/lib/agent/run";
 import { confirmTypedData } from "@/lib/typed";
+import { houseTeam } from "@/lib/house";
 
 export const maxDuration = 300;
 
@@ -25,7 +26,14 @@ export async function POST(req: Request) {
   const ticket = await readTicket(ticketId);
   if (!ticket) return bad("Unknown ticket", 404);
   if (ticket.status !== "Open") return bad(`This ticket is ${ticket.status.toLowerCase()}, not waiting for a witness`, 409);
-  if (((await readRoles(ticket.houseId, witness)) & 2) === 0) return bad("This wallet is not a witness in this house", 403);
+  if (((await readRoles(ticket.houseId, witness)) & 2) === 0) {
+    const witnesses = (await houseTeam(ticket.houseId)).filter((m) => m.roles & 2).map((m) => `${m.address.slice(0, 6)}…${m.address.slice(-4)}`);
+    return bad(
+      `The connected wallet (${witness.slice(0, 6)}…${witness.slice(-4)}) isn't a witness in this house. ` +
+        (witnesses.length ? `Switch your wallet to ${witnesses.join(" or ")} and sign again.` : "The owner hasn't added a witness yet."),
+      403,
+    );
+  }
   if ([ticket.issuer, ticket.payee].some((a) => a.toLowerCase() === witness.toLowerCase())) {
     return bad("The person who cut the ticket or gets paid by it can't also witness it", 403);
   }
