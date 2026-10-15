@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Logo } from "./Mark";
+import { FaucetButton } from "./FaucetButton";
 import { NetworkSwitch } from "./NetworkSwitch";
 import { WalletButton } from "./Wallet";
 
@@ -42,15 +43,22 @@ export function Nav({ testnet }: { testnet: boolean }) {
 
         <nav className="hidden items-center gap-5 text-sm md:flex lg:gap-7">
           {LINKS.map((l) => (
-            <Link key={l.href} href={l.href} className={`transition-colors duration-200 hover:text-ink ${path === l.href ? "text-ink" : "text-muted"}`}>
+            <Link
+              key={l.href}
+              href={l.href}
+              className={`transition-colors duration-200 hover:text-ink ${path === l.href ? "text-ink" : "text-muted"} ${l.href === "/house/new" ? "hidden lg:inline" : ""}`}
+            >
               {l.label}
             </Link>
           ))}
         </nav>
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-          <div className="hidden md:block">
-            <NetworkSwitch />
+          <div className="hidden items-center gap-2 md:flex">
+            <span className="hidden lg:inline-flex">
+              <FaucetButton />
+            </span>
+            <NetworkSwitch compact />
           </div>
           <WalletButton />
           <button
@@ -72,6 +80,12 @@ export function Nav({ testnet }: { testnet: boolean }) {
             <span className="text-sm text-muted">Network</span>
             <NetworkSwitch compact />
           </div>
+          {testnet && (
+            <div className="flex items-center justify-between border-b border-rule py-3">
+              <span className="text-sm text-muted">Free test USDC</span>
+              <FaucetButton />
+            </div>
+          )}
           {LINKS.map((l) => (
             <Link key={l.href} href={l.href} className="block border-b border-rule py-3 text-lg">
               {l.label}

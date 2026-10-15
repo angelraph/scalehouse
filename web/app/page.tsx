@@ -5,6 +5,9 @@ import { MoneyFlow, type FlowData } from "@/components/MoneyFlow";
 import { Reveal } from "@/components/Reveal";
 import { Stamp } from "@/components/Stamp";
 import { UseCases } from "@/components/UseCases";
+import { DotField } from "@/components/motion/DotField";
+import { DotChart, LayerStack, Scramble } from "@/components/motion/Motion";
+import { StickySteps, type StepTicket } from "@/components/motion/StickySteps";
 import { grossOf, money, qty, short, timeAgo } from "@/lib/format";
 import { chain, scaleTicketAddress } from "@/lib/network";
 import { publicStats } from "@/lib/stats";
@@ -20,6 +23,14 @@ const RULES = [
   ["A ticket pays once.", "A retry, a duplicate invoice, the same delivery note twice: refused, in public.", "one"],
   ["A mismatch freezes. It never rounds.", "Wrong wallet or wrong amount from the agent stops the ticket and says why.", "stop"],
 ] as const;
+
+const STACK = [
+  { name: "Your business", note: "Owner, clerks and witnesses" },
+  { name: "Scalehouse agent", note: "Decides when to pay, explains why" },
+  { name: "ScaleTicket contract", note: "Decides what is owed, and to whom" },
+  { name: "USDC and EURC by Circle", note: "Money that settles like a message" },
+  { name: `Arc`, note: "Stablecoin-native chain, sub-second finality" },
+];
 
 function toLive(t: Ticket | undefined): LiveTicketData | null {
   if (!t) return null;
@@ -56,35 +67,52 @@ export default async function Home() {
         network: chain.name,
       }
     : null;
+  const step: StepTicket | null = hero
+    ? {
+        id: hero.id,
+        payee: short(hero.payee),
+        quantity: qty(hero.quantity),
+        witnessed: hero.confirmedQuantity ? qty(hero.confirmedQuantity) : "—",
+        price: money(hero.unitPrice),
+        amount: money(grossOf(hero.confirmedQuantity || hero.quantity, hero.unitPrice)),
+        status: hero.status,
+      }
+    : null;
 
   return (
-    <div className="space-y-28">
-      {/* Hero */}
-      <section className="relative grid items-center gap-12 pt-6 lg:grid-cols-[1.15fr_1fr] lg:pt-14">
-        <div className="dots dots-fade pointer-events-none absolute -inset-x-4 -top-10 bottom-0 -z-10" />
-        <Reveal>
-          <span className="tag">Evidence-locked payments on {chain.name}</span>
-          <h1 className="display mt-6 text-[2.75rem] sm:text-7xl lg:text-[5.6rem]">
-            Weighed in public.
-            <br />
-            <span className="italic text-forest">Paid once.</span>
-          </h1>
-          <p className="mt-7 max-w-xl text-lg leading-relaxed text-ink-2">
-            In most small businesses the person who counts the goods is the person who sends the money. That&apos;s how
-            suppliers get short-weighed, paid late, or paid twice. Scalehouse splits the two:{" "}
-            <span className="text-ink">an agent decides when to pay, and a contract decides what is owed and to whom.</span>
-          </p>
-          <div className="mt-9 flex flex-wrap gap-3">
-            <Link href="/house/new" className="btn">
-              Open a house
-              <span aria-hidden>→</span>
-            </Link>
-            <Link href="/board" className="btn btn-quiet">
-              See every ticket
-            </Link>
-          </div>
-        </Reveal>
-        <MoneyFlow f={flow} />
+    <div className="space-y-28 sm:space-y-32">
+      {/* Hero: Column's dot-matrix world, flowing in brand colors, with the real money flow on top */}
+      <section className="relative isolate pt-4 lg:pt-10">
+        <div className="pointer-events-none absolute top-[-1.5rem] left-1/2 -z-10 h-[calc(100%+6rem)] w-screen -translate-x-1/2">
+          <DotField />
+          {/* Keep the headline side clean, let the world show on the right, fade into the page below. */}
+          <div className="hero-fade absolute inset-0" />
+        </div>
+        <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_1fr]">
+          <Reveal>
+            <span className="tag">Evidence-locked payments on {chain.name}</span>
+            <h1 className="display mt-6 text-[2.75rem] sm:text-7xl lg:text-[5.6rem]">
+              Weighed in public.
+              <br />
+              <span className="italic text-forest">Paid once.</span>
+            </h1>
+            <p className="mt-7 max-w-xl text-lg leading-relaxed text-ink-2">
+              In most small businesses the person who counts the goods is the person who sends the money. That&apos;s how
+              suppliers get short-weighed, paid late, or paid twice. Scalehouse splits the two:{" "}
+              <span className="text-ink">an agent decides when to pay, and a contract decides what is owed and to whom.</span>
+            </p>
+            <div className="mt-9 flex flex-wrap gap-3">
+              <Link href="/house/new" className="btn">
+                Open a house
+                <span aria-hidden>→</span>
+              </Link>
+              <Link href="/board" className="btn btn-quiet bg-sheet/70 backdrop-blur">
+                See every ticket
+              </Link>
+            </div>
+          </Reveal>
+          <MoneyFlow f={flow} />
+        </div>
       </section>
 
       {/* Live strip */}
@@ -108,20 +136,18 @@ export default async function Home() {
         </section>
       )}
 
-      {/* Figures */}
-      <section>
-        <div className="grid items-end gap-10 lg:grid-cols-[1.2fr_1fr]">
+      {/* Figures over Column's rising dot chart */}
+      <section className="relative">
+        <div className="grid items-end gap-10 lg:grid-cols-[1fr_1fr]">
           <Reveal>
             <span className="tag">On the chain right now</span>
-            <h2 className="two-tone mt-5 max-w-3xl text-3xl sm:text-4xl">
+            <h2 className="two-tone mt-5 max-w-xl text-3xl sm:text-4xl">
               Every ticket is public. <em>Paid, waiting, refused or frozen, with the reason, read straight from the contract.</em>
             </h2>
           </Reveal>
-          <Reveal delay={150}>
-            <LiveTicket t={toLive(hero)} network={chain.name} />
-          </Reveal>
+          <DotChart className="h-44 sm:h-56" />
         </div>
-        <div className="mt-12 grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-rule lg:grid-cols-4">
+        <div className="mt-10 grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-rule lg:grid-cols-4">
           {[
             ["Paid out", stats ? money(stats.paidVolume) : "—", stats ? `${stats.paid} tickets` : ""],
             ["People paid", stats ? String(stats.payees) : "—", "distinct wallets"],
@@ -129,11 +155,36 @@ export default async function Home() {
             ["Houses", stats ? String(stats.houses) : "—", "businesses paying through Scalehouse"],
           ].map(([k, v, s], i) => (
             <Reveal key={k} delay={i * 90} className="bg-paper p-6 sm:p-8">
-              <div className="figure text-3xl tracking-tight sm:text-4xl">{v}</div>
+              <Scramble text={v} className="figure block text-3xl tracking-tight sm:text-4xl" />
               <div className="mt-3 text-sm font-medium">{k}</div>
               <div className="text-xs text-muted">{s}</div>
             </Reveal>
           ))}
+        </div>
+      </section>
+
+      {/* A real ticket as the case study, over a gold halftone (Column's Brex card) */}
+      <section className="relative overflow-hidden rounded-[32px] bg-sheet p-6 shadow-[var(--ring)] sm:p-10">
+        <div className="halftone pointer-events-none absolute inset-y-0 right-0 w-2/3" />
+        <div className="relative grid items-center gap-10 lg:grid-cols-2">
+          <Reveal>
+            <span className="tag">A real ticket</span>
+            <h2 className="mt-5 text-3xl font-semibold tracking-tight sm:text-4xl">Every payment has a receipt anyone can check</h2>
+            <p className="mt-4 max-w-md text-muted">
+              Who was paid, how much, who counted, and why the agent released it. Read from {chain.name}, with the agent&apos;s
+              reasoning checked against the hash it put on-chain.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-2 text-xs">
+              {["Payee locked", "Second witness", "Paid once", "Reasoning on record"].map((x) => (
+                <span key={x} className="rounded-full bg-paper-2 px-3 py-1.5 text-ink-2">
+                  {x}
+                </span>
+              ))}
+            </div>
+          </Reveal>
+          <Reveal delay={150}>
+            <LiveTicket t={toLive(hero)} network={chain.name} />
+          </Reveal>
         </div>
       </section>
 
@@ -147,8 +198,10 @@ export default async function Home() {
         </Reveal>
         <div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {RULES.map(([title, body, glyph], i) => (
-            <Reveal key={title} delay={i * 80} className={`tile flex min-h-64 flex-col justify-between p-7 ${i === 0 ? "lg:row-span-2 lg:min-h-0" : ""}`}>
-              <Glyph kind={glyph} big={i === 0} />
+            <Reveal key={title} delay={i * 80} className={`tile group flex min-h-64 flex-col justify-between p-7 transition-transform duration-500 hover:-translate-y-1 ${i === 0 ? "lg:row-span-2 lg:min-h-0" : ""}`}>
+              <div className="transition-transform duration-500 group-hover:scale-105">
+                <Glyph kind={glyph} big={i === 0} />
+              </div>
               <div>
                 <div className="figure text-xs text-bronze">0{i + 1}</div>
                 <h3 className="mt-2 text-xl font-semibold tracking-tight">{title}</h3>
@@ -159,66 +212,42 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* How: dark band */}
-      <section id="how" className="relative -mx-4 scroll-mt-24 overflow-hidden rounded-[32px] bg-night px-6 py-16 text-[#e9e7d8] sm:px-12">
-        <div className="dots-lime pointer-events-none absolute inset-0 opacity-60" />
-        <div className="relative grid gap-12 lg:grid-cols-2">
-          <Reveal>
-            <span className="tag !bg-white/10 !text-lime">How a ticket moves</span>
-            <h2 className="two-tone mt-5 text-3xl text-white sm:text-4xl">
-              Four people, one rule. <em className="!text-white/50">Each can only do their part.</em>
-            </h2>
-            <ol className="mt-10 space-y-6">
-              {[
-                ["Clerk", "cuts the ticket: what, how many, at which posted price, to which wallet."],
-                ["Witness", "counts it again and signs what they saw. Free, no gas."],
-                ["Agent", "screens the payee, reads the history, decides what to pay first, and writes down why."],
-                ["Contract", "checks the agent's payee and amount against the ticket, then pays, or freezes."],
-              ].map(([who, what]) => (
-                <li key={who} className="grid grid-cols-[6.5rem_1fr] gap-4 border-t border-white/10 pt-5">
-                  <span className="font-semibold text-lime">{who}</span>
-                  <span className="text-white/70">{what}</span>
-                </li>
-              ))}
-            </ol>
-          </Reveal>
-          <Reveal delay={150}>
-            <div className="overflow-hidden rounded-2xl bg-night-2 ring-1 ring-white/10">
-              <div className="flex items-center gap-1.5 border-b border-white/10 px-4 py-3">
-                <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
-                <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
-                <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
-                <span className="figure ml-3 text-xs text-white/40">ScaleTicket.release</span>
-              </div>
-              <pre className="figure overflow-x-auto p-5 text-[0.8rem] leading-6 text-white/80">
-                <span className="text-white/40">{"// the agent names who and how much\n"}</span>
-                {"release(ticket, "}
-                <span className="text-lime">payee</span>
-                {", "}
-                <span className="text-lime">amount</span>
-                {", rationaleHash)\n\n"}
-                <span className="text-white/40">{"// the contract checks it against the ticket\n"}</span>
-                {"payee  == ticket.payee           "}
-                <span className="text-white/40">{"// locked at cut\n"}</span>
-                {"amount == witnessed × postedPrice"}
-                <span className="text-white/40">{"\n// then pays, once\n"}</span>
-                <span className="text-lime">{"→ TicketReleased"}</span>
-                {"\n"}
-                <span className="text-white/40">{"// or, if the agent got either wrong\n"}</span>
-                <span className="text-[#ff8a75]">{"→ TicketFrozen(PayeeMismatch)"}</span>
-                <span className="caret text-lime" />
-              </pre>
+      {/* Dark band: the stack, then the sticky walk-through */}
+      <section id="how" className="relative left-1/2 w-screen -translate-x-1/2 scroll-mt-24 overflow-x-clip bg-night text-[#e9e7d8]">
+        <div className="dots-lime pointer-events-none absolute inset-0 opacity-50" />
+        <div className="relative mx-auto max-w-6xl px-4 py-20 sm:py-28">
+          <div className="grid items-center gap-12 lg:grid-cols-2">
+            <Reveal>
+              <span className="tag !bg-white/10 !text-lime">Infrastructure</span>
+              <h2 className="mt-5 text-4xl font-semibold tracking-tight text-white sm:text-5xl">Built in layers that check each other</h2>
+              <p className="mt-4 max-w-md text-white/65">
+                The agent sits between your business and the contract. It can decide when money moves, never how much or to
+                whom. Under it, Circle&apos;s stablecoins settle on Arc in under a second, for about a cent.
+              </p>
+            </Reveal>
+            <LayerStack layers={STACK} />
+          </div>
+
+          <div className="mt-24">
+            <Reveal>
+              <span className="tag !bg-white/10 !text-lime">How a ticket moves</span>
+              <h2 className="two-tone mt-5 max-w-2xl text-3xl text-white sm:text-4xl">
+                Four people, one rule. <em className="!text-white/50">Scroll through a real ticket.</em>
+              </h2>
+            </Reveal>
+            <div className="mt-6">
+              <StickySteps t={step} />
             </div>
-          </Reveal>
+          </div>
         </div>
       </section>
 
-      {/* Use cases */}
+      {/* Use cases: Column's big switching list with pixel-dot art */}
       <section>
         <Reveal>
           <span className="tag">Who it&apos;s for</span>
         </Reveal>
-        <div className="mt-6">
+        <div className="mt-8">
           <UseCases />
         </div>
       </section>
@@ -242,11 +271,11 @@ export default async function Home() {
           {[
             ["Open a house", "Connect the wallet you pay from, set limits, post prices.", "/house/new"],
             ["Watch the board", "Every ticket in every house, as it happens.", "/board"],
-            ["Read the rule", "The ScaleTicket specification, for builders.", "https://github.com/angelraph/scalehouse/blob/main/docs/SPEC.md"],
+            ["Read the docs", "Roles, the agent, the contract, step by step.", "/docs"],
           ].map(([t, d, href], i) => (
             <Reveal key={t} delay={i * 90}>
-              <Link href={href} className="group card flex h-full flex-col justify-between p-6 transition-shadow duration-300 hover:shadow-[var(--lift)]">
-                <div className="dots mb-8 h-16 w-24 rounded-md opacity-70" />
+              <Link href={href} className="group card flex h-full flex-col justify-between p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--lift)]">
+                <div className="dots mb-8 h-16 w-24 rounded-md opacity-70 transition-opacity group-hover:opacity-100" />
                 <div>
                   <div className="flex items-center justify-between font-semibold">
                     {t}

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Stamp } from "@/components/Stamp";
+import { PageHalo } from "@/components/motion/PageHalo";
+import { FaucetButton } from "@/components/FaucetButton";
 import { allTickets, counts, readHouses } from "@/lib/chain";
 import { grossOf, money, qty, short, timeAgo } from "@/lib/format";
 import { eventsByName, syncIfStale } from "@/lib/indexer";
@@ -31,14 +33,16 @@ export default async function Board({ searchParams }: { searchParams: Promise<{ 
 
   return (
     <div className="space-y-8">
-      <div className="relative pt-8">
-        <div className="dots dots-fade pointer-events-none absolute -inset-x-4 -top-6 bottom-0 -z-10" />
+      <div className="relative isolate pt-8 pb-4">
+        <PageHalo />
         <span className="tag">The public ledger</span>
         <h1 className="display mt-5 text-6xl sm:text-7xl">The board</h1>
         <p className="two-tone mt-4 max-w-2xl text-xl">
           Every ticket in every house. <em>Paid, waiting, frozen and why, read directly from the contract. Nothing here can be edited after the fact.</em>
         </p>
       </div>
+
+      <FaucetButton variant="block" />
 
       <nav className="tabs text-sm">
         {FILTERS.map((f) => (

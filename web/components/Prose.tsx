@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Reveal } from "./Reveal";
+import { PageHalo } from "./motion/PageHalo";
 
 /** Shared layout for reading pages (docs, FAQ, legal): a quiet sidebar and a measured column. */
 export function DocShell({
@@ -16,9 +18,14 @@ export function DocShell({
 }) {
   return (
     <div className="pt-6 sm:pt-10">
-      <span className="tag">{eyebrow}</span>
-      <h1 className="display mt-5 text-5xl sm:text-6xl">{title}</h1>
-      {intro && <p className="two-tone mt-4 max-w-2xl text-lg sm:text-xl">{intro}</p>}
+      <div className="relative isolate pb-4">
+        <PageHalo />
+        <Reveal>
+          <span className="tag">{eyebrow}</span>
+          <h1 className="display mt-5 text-5xl sm:text-6xl">{title}</h1>
+          {intro && <p className="two-tone mt-4 max-w-2xl text-lg sm:text-xl">{intro}</p>}
+        </Reveal>
+      </div>
       <div className={`mt-10 grid gap-10 ${nav ? "lg:grid-cols-[13rem_1fr]" : ""}`}>
         {nav && (
           <nav className="hidden lg:block">

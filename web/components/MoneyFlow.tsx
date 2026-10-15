@@ -55,19 +55,6 @@ export function MoneyFlow({ f }: { f: FlowData | null }) {
             <stop offset="100%" stopColor="var(--forest)" stopOpacity="0.9" />
           </linearGradient>
         </defs>
-        <rect
-          width="560"
-          height="420"
-          fill="url(#dotgrid)"
-          mask="url(#fieldmask)"
-          style={{ opacity: phase >= 1 ? 0.5 : 0, transition: "opacity 1.5s var(--ease-reveal)" }}
-        />
-        {/* lit cells drifting across the field, like Column's slow background shimmer */}
-        <g className="flow-shimmer" mask="url(#fieldmask)">
-          {Array.from({ length: 26 }, (_, i) => (
-            <circle key={i} cx={20 + ((i * 97) % 520)} cy={15 + ((i * 53) % 440)} r="1.8" fill="var(--lime)" style={{ animationDelay: `${(i % 9) * 0.7}s` }} />
-          ))}
-        </g>
 
         {/* the route, drawn as a dotted line */}
         <path d={ROUTE} fill="none" stroke="var(--rule-strong)" strokeWidth="2" strokeDasharray="2 6" strokeLinecap="round" />

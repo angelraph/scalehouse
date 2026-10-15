@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { parseEventLogs, type Abi } from "viem";
 import { RequireWallet } from "@/components/Wallet";
+import { FaucetButton } from "@/components/FaucetButton";
 import { useTx } from "@/components/useTx";
 import { scaleTicketAbi } from "@/lib/abi";
 import { toUnits } from "@/lib/format";
@@ -76,6 +77,8 @@ export default function NewHouse() {
           and then it goes straight to the person you owe. You can pause or change limits at any time.
         </p>
       </div>
+
+      <FaucetButton variant="block" />
 
       <RequireWallet why="Connect the wallet your business pays from.">
         <div className="card space-y-5 p-6">
