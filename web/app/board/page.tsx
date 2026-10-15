@@ -18,8 +18,9 @@ export default async function Board({ searchParams }: { searchParams: Promise<{ 
   const [tickets, { houseCount }, created, freezes] = await Promise.all([
     allTickets(),
     counts(),
-    eventsByName(["HouseCreated"], 1000),
-    eventsByName(["TicketFrozen"], 5000),
+    // Names and freeze reasons come from the event index; the ticket rows themselves don't.
+    eventsByName(["HouseCreated"], 1000).catch(() => []),
+    eventsByName(["TicketFrozen"], 5000).catch(() => []),
   ]);
   const houses = await readHouses(Array.from({ length: houseCount }, (_, i) => i + 1));
   const names = new Map(created.map((e) => [Number(e.house_id), String((e.args as Record<string, unknown>).name)]));

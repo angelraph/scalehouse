@@ -45,7 +45,7 @@ export default async function Home() {
         <div className="sheet ruled">
           <Figure label="Tickets cut" value={stats ? String(stats.tickets) : "—"} />
           <Figure label="Paid" value={stats ? money(stats.paidVolume) : "—"} sub={stats ? `${stats.paid} tickets to ${stats.payees} people` : undefined} />
-          <Figure label="Refused or frozen in public" value={stats ? String(stats.refusals) : "—"} />
+          <Figure label="Refused or frozen in public" value={stats ? String(stats.refusals ?? stats.frozenNow) : "—"} />
           <Figure label="Houses" value={stats ? String(stats.houses) : "—"} />
         </div>
       </section>

@@ -20,12 +20,12 @@ import { privateKeyToAccount } from "viem/accounts";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const env = Object.fromEntries(
-  readFileSync(path.join(here, "../../.keys/testnet.env"), "utf8")
+  readFileSync(process.env.KEYS_FILE ?? path.join(here, "../../.keys/testnet.env"), "utf8")
     .split(/\r?\n/)
     .filter(Boolean)
     .map((l) => l.split("=")),
 );
-const abiSrc = readFileSync(path.join(here, "../lib/abi.ts"), "utf8");
+const abiSrc = readFileSync(process.env.ABI_FILE ?? path.join(here, "../lib/abi.ts"), "utf8");
 const abi = JSON.parse(abiSrc.slice(abiSrc.indexOf("["), abiSrc.lastIndexOf("]") + 1));
 
 const ST = process.env.ST ?? "0x321322aC12e419111E27781c5B2618fCB97AC7b7";
@@ -132,7 +132,8 @@ try {
   await pub.simulateContract({ account: clerk.account, address: ST, abi, functionName: "cut", args: [houseId, supplier, rateId, 1000n, evidence(`E2E-${run}-1`)] });
   check("duplicate invoice rejected", "was accepted", "DuplicateEvidence");
 } catch (e) {
-  check("duplicate invoice rejected", e.shortMessage ?? e.message, "DuplicateEvidence");
+  const reverted = e.walk?.((x) => x.data?.errorName);
+  check("duplicate invoice rejected", reverted?.data?.errorName ?? e.shortMessage, "DuplicateEvidence");
 }
 
 const after = await pub.readContract({ address: USDC, abi: erc20, functionName: "balanceOf", args: [supplier] });

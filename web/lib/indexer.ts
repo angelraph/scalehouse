@@ -31,7 +31,7 @@ const jsonable = (args: Record<string, unknown>) =>
  */
 export async function sync(): Promise<{ indexedTo: bigint; head: bigint; added: number }> {
   const head = await publicClient.getBlockNumber();
-  const cursorRow = must(await db().from("sh_sync").select("last_block").eq("id", SYNC_ID).maybeSingle(), "sh_sync");
+  const cursorRow = must<{ last_block: number } | null>(await db().from("sh_sync").select("last_block").eq("id", SYNC_ID).maybeSingle(), "sh_sync");
   let from = cursorRow ? BigInt(cursorRow.last_block) + 1n : deployBlock;
   let added = 0;
 
@@ -75,9 +75,9 @@ export async function sync(): Promise<{ indexedTo: bigint; head: bigint; added: 
 
 /** Syncs only if the index is more than `maxAgeMs` old, so page loads stay fast. */
 export async function syncIfStale(maxAgeMs = 15_000) {
-  const row = must(await db().from("sh_sync").select("updated_at").eq("id", SYNC_ID).maybeSingle(), "sh_sync");
-  if (row && Date.now() - new Date(row.updated_at).getTime() < maxAgeMs) return;
   try {
+    const row = must<{ updated_at: string } | null>(await db().from("sh_sync").select("updated_at").eq("id", SYNC_ID).maybeSingle(), "sh_sync");
+    if (row && Date.now() - new Date(row.updated_at).getTime() < maxAgeMs) return;
     await sync();
   } catch (err) {
     // A failed sync leaves pages showing slightly older history; chain state is still read live.

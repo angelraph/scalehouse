@@ -28,7 +28,7 @@ const MAX_AGE_MS = 24 * 60 * 60 * 1000;
 export async function screen(house: House, address: Address, force = false): Promise<Screening> {
   const key = address.toLowerCase();
   if (!force) {
-    const cached = must(
+    const cached = must<{ risk: Risk; screened_at: string; result: Screening } | null>(
       await db().from("sh_screenings").select("*").eq("house_id", house.id).eq("address", key).maybeSingle(),
       "sh_screenings",
     );
