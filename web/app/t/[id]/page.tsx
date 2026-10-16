@@ -61,7 +61,7 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
       {ticket.status === "Open" && (
         <div className="grid gap-4 lg:grid-cols-2">
           <WitnessPanel ticketId={id} houseId={ticket.houseId} claimed={ticket.quantity.toString()} payee={ticket.payee} evidenceHash={ticket.evidenceHash} />
-          <ShareConfirm ticketId={id} house={name} what={`${qty(ticket.quantity)} × ${money(ticket.unitPrice, symbol)}${ev?.note && ev.note !== ev.reference && !/^\s*[\d.]+\s*$/.test(ev.note) ? `, ${ev.note.slice(0, 80)}` : ""}`} reference={ev?.reference} amount={money(grossOf(ticket.quantity, ticket.unitPrice), symbol)} payee={label(ticket.payee)} />
+          <ShareConfirm ticketId={id} house={name} what={`${qty(ticket.quantity)} × ${money(ticket.unitPrice, symbol)}${ev?.note && !ev.note.includes(ev.reference) && !/^\s*[\d.]+\s*$/.test(ev.note) ? `, ${ev.note.slice(0, 80)}` : ""}`} reference={ev?.reference} amount={money(grossOf(ticket.quantity, ticket.unitPrice), symbol)} payee={label(ticket.payee)} />
         </div>
       )}
 
