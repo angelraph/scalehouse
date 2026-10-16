@@ -56,6 +56,19 @@ export function QuickPay({ houseId, owner, symbol, maxTicket, houseName }: { hou
   const valid = units != null && units > 0n && !overCap && isAddress(payee.trim()) && what.trim().length > 0;
 
   async function pay() {
+    try {
+      await payInner();
+    } catch (e) {
+      setStage(null);
+      setError(`${(e as Error).message.split("\n")[0]} Nothing was paid. Tap Pay to try again.`);
+    }
+  }
+
+  /** A chain read that gives up after 20s instead of hanging the button. */
+  const read = <T,>(p: Promise<T>) =>
+    Promise.race([p, new Promise<T>((_, rej) => setTimeout(() => rej(new Error("The network is slow right now.")), 20000))]);
+
+  async function payInner() {
     setError(null);
     const h = BigInt(houseId);
     const to = getAddress(payee.trim());
@@ -64,7 +77,7 @@ export function QuickPay({ houseId, owner, symbol, maxTicket, houseName }: { hou
 
     // 1. A fixed price for this amount, posted once and reused next time.
     setStage("Checking the price");
-    const r = (await publicClient.readContract({ ...st, functionName: "rates", args: [h, rateId] })) as readonly [bigint, bigint, boolean];
+    const r = (await read(publicClient.readContract({ ...st, functionName: "rates", args: [h, rateId] }))) as readonly [bigint, bigint, boolean];
     if (!(r[2] && r[0] === units && Number(r[1]) > Date.now() / 1000 + 86400)) {
       setStage(null);
       const ok = await send("Setting the amount (once)", { ...st, functionName: "setRate", args: [h, rateId, units!, BigInt(Math.floor(Date.now() / 1000) + 365 * 86400), true, label] });
@@ -72,7 +85,7 @@ export function QuickPay({ houseId, owner, symbol, maxTicket, houseName }: { hou
     }
 
     // 2. The owner records it themselves.
-    const roles = Number(await publicClient.readContract({ ...st, functionName: "roles", args: [h, address!] }));
+    const roles = Number(await read(publicClient.readContract({ ...st, functionName: "roles", args: [h, address!] })));
     if ((roles & ROLE_ISSUER) === 0) {
       const ok = await send("Letting you record payments (once)", { ...st, functionName: "setRoles", args: [h, address!, roles | ROLE_ISSUER] });
       if (!ok) return;
