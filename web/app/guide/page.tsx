@@ -35,15 +35,15 @@ export default function Guide() {
 
       <Section id="payer" title="If you're paying someone">
         <p>
-          You need a wallet with <strong>at least 2 USDC on Arc</strong>, and one other person to <strong>confirm</strong> the work
-          (a friend, teammate or staff member; it&apos;s free for them).
+          You need one wallet with <strong>at least 2 USDC on Arc</strong>, and one other person to <strong>confirm</strong> each payment
+          (a friend, teammate or staff member). They don&apos;t need a wallet app, and it&apos;s free for them.
         </p>
         <Steps
           items={[
-            ["Open your house, once", <>Tap <strong>Connect</strong>, then <strong>Open a house</strong>. Answer three questions: your business name, who records (Me) and who confirms (paste their wallet), and what you pay for (e.g. “Logo design”, 1 USDC). Approve in your wallet; it costs a few cents.</>],
-            ["Record the job", <>On your house page tap <strong>Cut a ticket</strong>. Tip: tap <strong>Take or choose photo</strong> and snap the invoice; the AI fills the form and warns you if anything looks wrong. Check the wallet you&apos;re paying, it gets locked.</>],
-            ["Send it to your confirmer", <>On the ticket page tap <strong>Share on WhatsApp</strong>. They open it, connect their wallet, type what they checked and tap <strong>Sign my count</strong>.</>],
-            ["Done", "The agent pays within about a minute. The ticket page shows Paid and why: send it to the worker as their receipt."],
+            ["Open your house, once", <>Tap <strong>Connect</strong>, then <strong>Open a house</strong>. Give it a name, set a daily budget, and approve in your wallet. It costs a few cents.</>],
+            ["Add your confirmer, once", <>On your house page, under <strong>Confirmers</strong>, type their name and tap <strong>Add confirmer</strong>. Then tap <strong>Send link on WhatsApp</strong>. That private link is all they ever need.</>],
+            ["Pay someone", <>In <strong>Pay someone</strong>, paste their wallet, type the amount and what it&apos;s for, and tap <strong>Pay</strong>. Their wallet gets locked to the payment.</>],
+            ["Your confirmer taps Confirm", <>Tap <strong>Ask them to confirm</strong>. They open their link, check it&apos;s real, and tap <strong>Confirm</strong>. The agent pays within about a minute, and the payment page is the receipt.</>],
           ]}
         />
         <div className="mt-6 flex flex-wrap gap-3">
