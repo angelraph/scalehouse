@@ -42,7 +42,7 @@ export async function POST(req: Request) {
     const existing = await circle.listWallets({ walletSetId: set.id, blockchain, pageSize: 10 });
     let wallet = existing.data?.wallets?.[0];
     if (!wallet) {
-      const created = await circle.createWallets({ walletSetId: set.id, blockchains: [blockchain], count: 1, accountType: "EOA", metadata: [{ name }] });
+      const created = await circle.createWallets({ walletSetId: set.id, blockchains: [blockchain], count: 1, accountType: "EOA" });
       wallet = created.data?.wallets?.[0];
     }
     if (!wallet) throw new Error("Circle returned no wallet");
