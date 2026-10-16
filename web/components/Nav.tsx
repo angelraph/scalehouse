@@ -12,6 +12,7 @@ const LINKS = [
   { href: "/board", label: "Board" },
   { href: "/docs", label: "Docs" },
   { href: "/faq", label: "FAQ" },
+  { href: "/attack", label: "Trick the agent" },
   { href: "/builders", label: "For builders" },
   { href: "/house/new", label: "Open a house" },
 ];
@@ -47,7 +48,7 @@ export function Nav({ testnet }: { testnet: boolean }) {
             <Link
               key={l.href}
               href={l.href}
-              className={`transition-colors duration-200 hover:text-ink ${path === l.href ? "text-ink" : "text-muted"} ${l.href === "/house/new" ? "hidden lg:inline" : l.href === "/builders" ? "hidden xl:inline" : ""}`}
+              className={`transition-colors duration-200 hover:text-ink ${path === l.href ? "text-ink" : "text-muted"} ${l.href === "/house/new" ? "hidden lg:inline" : l.href === "/builders" || l.href === "/attack" ? "hidden xl:inline" : ""}`}
             >
               {l.label}
             </Link>

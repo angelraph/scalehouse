@@ -233,6 +233,12 @@ export default async function Home() {
             </div>
           </Reveal>
         </div>
+        <Reveal className="mt-6 flex flex-col items-start justify-between gap-4 rounded-[24px] border border-line p-6 sm:flex-row sm:items-center">
+          <p className="text-ink-2">
+            <strong className="text-ink">Don&apos;t take our word for it.</strong> Hide an instruction in an invoice, hijack the agent, try to pay twice. Six real attacks, live on testnet.
+          </p>
+          <a href="https://scalehouse-testnet.vercel.app/attack" className="btn shrink-0">Try to trick the agent →</a>
+        </Reveal>
       </section>
 
       {/* The rule */}
