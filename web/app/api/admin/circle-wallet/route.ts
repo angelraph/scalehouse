@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  const apiKey = (networkName === "mainnet" ? process.env.CIRCLEMAINNET_API_KEY : undefined) || process.env.CIRCLE_API_KEY;
+  const apiKey = ((networkName === "mainnet" ? process.env.CIRCLEMAINNET_API_KEY : undefined) || process.env.CIRCLE_API_KEY)?.trim();
   const body = (await req.json().catch(() => ({}))) as { registerEntitySecret?: string };
   if (body.registerEntitySecret) {
     // One-time: register a fresh entity secret with this key's entity. Returns the recovery file.
@@ -26,9 +26,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: err.message, detail: err.response?.data ?? null }, { status: 500 });
     }
   }
-  const entitySecret = (networkName === "mainnet" ? process.env.CIRCLEMAINNET_ENTITY_SECRET : undefined) || process.env.CIRCLE_ENTITY_SECRET;
+  const entitySecret = ((networkName === "mainnet" ? process.env.CIRCLEMAINNET_ENTITY_SECRET : undefined) || process.env.CIRCLE_ENTITY_SECRET)?.trim().replace(/^["']|["']$/g, "");
   if (!apiKey || !entitySecret) return NextResponse.json({ error: "Circle key or entity secret missing" }, { status: 503 });
 
+  const shape = { secretLength: entitySecret.length, secretIsHex: /^[0-9a-f]+$/i.test(entitySecret), keyPrefix: apiKey.split(":")[0] };
   const blockchain = networkName === "mainnet" ? "ARC" : "ARC-TESTNET";
   const name = `Scalehouse agent (${networkName})`;
   try {
@@ -48,6 +49,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ keyType: apiKey.split(":")[0], blockchain, walletSetId: set.id, walletId: wallet.id, address: wallet.address, state: wallet.state });
   } catch (e) {
     const err = e as { response?: { data?: unknown }; message: string };
-    return NextResponse.json({ error: err.message, detail: err.response?.data ?? null }, { status: 500 });
+    return NextResponse.json({ error: err.message, shape, detail: err.response?.data ?? null }, { status: 500 });
   }
 }

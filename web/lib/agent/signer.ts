@@ -57,8 +57,8 @@ function circleSigner(): AgentSigner {
   if (!walletId || !address) throw new Error("AGENT_CIRCLE_WALLET_ID and AGENT_ADDRESS are required when AGENT_SIGNER=circle");
   const circle = initiateDeveloperControlledWalletsClient({
     // The live key is used on mainnet; the TEST key on testnet.
-    apiKey: (networkName === "mainnet" ? process.env.CIRCLEMAINNET_API_KEY : undefined) || process.env.CIRCLE_API_KEY!,
-    entitySecret: ((networkName === "mainnet" ? process.env.CIRCLEMAINNET_ENTITY_SECRET : undefined) || process.env.CIRCLE_ENTITY_SECRET)!,
+    apiKey: ((networkName === "mainnet" ? process.env.CIRCLEMAINNET_API_KEY : undefined) || process.env.CIRCLE_API_KEY)?.trim()!,
+    entitySecret: (((networkName === "mainnet" ? process.env.CIRCLEMAINNET_ENTITY_SECRET : undefined) || process.env.CIRCLE_ENTITY_SECRET)?.trim().replace(/^["']|["']$/g, ""))!,
   });
 
   return {
