@@ -2,7 +2,7 @@ import "server-only";
 import type OpenAI from "openai";
 import { decodeEventLog, getAddress, isAddress, keccak256, toBytes, type Address, type Hex, type TransactionReceipt } from "viem";
 import { scaleTicketAbi } from "../abi";
-import { effectivePayeeCap, housePosition } from "../chain";
+import { effectivePayeeCap, housePosition, readTicket } from "../chain";
 import { grossOf, money, qty } from "../format";
 import { freezeReasons, houseTickets, labels } from "../house";
 import { sql } from "../db";
@@ -287,6 +287,10 @@ async function release(state: RunState, input: Record<string, unknown>): Promise
   if (s.risk === "blocked" || s.risk === "unavailable") {
     return { content: `Refused before sending: screening result is ${s.risk}. Do not pay; defer or flag instead.`, isError: true };
   }
+
+  // Several confirms can wake overlapping runs; only pay a ticket that is still waiting.
+  const live = await readTicket(ticketId);
+  if (live?.status !== "Confirmed") return { content: `Skipped: ticket #${ticketId} is ${live?.status ?? "missing"} now, so there is nothing to pay.` };
 
   const pos = await housePosition(state.house);
   const hash = await saveRationale({

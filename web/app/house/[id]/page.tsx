@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { OwnerPanel } from "@/components/OwnerPanel";
 import { AppointAgent } from "@/components/AppointAgent";
+import { ConfirmAll } from "@/components/ConfirmAll";
 import { RunAgentButton } from "@/components/RunAgentButton";
 import { AgentBrief } from "@/components/AgentBrief";
 import { Stamp } from "@/components/Stamp";
@@ -106,6 +107,10 @@ export default async function HousePage({ params, searchParams }: { params: Prom
 
       <section className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
         <div>
+          <ConfirmAll
+              houseId={id}
+              open={tickets.filter((t) => t.status === "Open").map((t) => ({ id: t.id, quantity: t.quantity.toString(), payee: t.payee, payeeLabel: label(t.payee), evidenceHash: t.evidenceHash }))}
+          />
           <h2 className="mb-3 display text-3xl">Tickets</h2>
           {ordered.length === 0 ? (
             <div className="card p-6 text-muted">No tickets yet. A clerk cuts the first one when goods arrive or work is delivered.</div>
