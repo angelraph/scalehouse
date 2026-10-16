@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isHex } from "viem";
 import { publicClient, readHouse } from "@/lib/chain";
+import { CHECKER_NAME } from "@/lib/autoapprove";
 import { confirmersOf, createConfirmer } from "@/lib/confirmers";
 import { confirmersMessage } from "@/lib/messages";
 import { CHAIN_ID, siteUrl } from "@/lib/network";
@@ -21,6 +22,7 @@ export async function POST(req: Request) {
   if (!houseId || !isHex(body?.signature ?? "") || !at) return bad("houseId, at and signature required");
   if (Math.abs(Date.now() / 1000 - at) > 600) return bad("That signature is too old. Try again.");
   if (action === "add" && !name) return bad("Give the confirmer a name");
+  if (name === CHECKER_NAME) return bad("Pick another name");
 
   const house = await readHouse(houseId);
   if (!house) return bad("Unknown house", 404);
@@ -34,7 +36,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ name: c.name, address: c.address, link: link(c.token) });
     }
     const list = await confirmersOf(houseId);
-    return NextResponse.json({ confirmers: list.map((c) => ({ name: c.name, address: c.address, link: link(c.token) })) });
+    return NextResponse.json({ confirmers: list.filter((c) => c.name !== CHECKER_NAME).map((c) => ({ name: c.name, address: c.address, link: link(c.token) })) });
   } catch (e) {
     return bad((e as Error).message.split("\n")[0], 500);
   }

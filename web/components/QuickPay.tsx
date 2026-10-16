@@ -27,7 +27,7 @@ export function QuickPay({ houseId, owner, symbol, maxTicket, houseName }: { hou
   const [amount, setAmount] = useState("");
   const [what, setWhat] = useState("");
   const [stage, setStage] = useState<string | null>(null);
-  const [done, setDone] = useState<{ id: number; amount: string; to: string; what: string } | null>(null);
+  const [done, setDone] = useState<{ id: number; amount: string; to: string; what: string; state: "approving" | "paying" | "paid" | "waiting" | "held"; note?: string } | null>(null);
   const [confirmers, setConfirmers] = useState<LinkConfirmer[]>([]);
 
   useEffect(() => {
@@ -94,10 +94,40 @@ export function QuickPay({ houseId, owner, symbol, maxTicket, houseName }: { hou
     const receipt = await send("Creating the payment", { ...st, functionName: "cut", args: [h, to, rateId, 1000n, body.evidenceHash as Hex] });
     if (!receipt) return;
     const [ev] = parseEventLogs({ abi: scaleTicketAbi, logs: receipt.logs, eventName: "TicketCut" });
-    setDone({ id: Number(ev.args.ticketId), amount: `${amount.trim()} ${symbol}`, to: short(to), what: what.trim() });
+    const id = Number(ev.args.ticketId);
+    const base = { id, amount: `${amount.trim()} ${symbol}`, to: short(to), what: what.trim() };
+    setDone({ ...base, state: "approving" });
     setPayee("");
     setAmount("");
     setWhat("");
+
+    // Auto-approve if the owner's rule covers it; otherwise it waits for the confirmer.
+    try {
+      const r = await fetch("/api/auto-approve", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ticketId: id }) });
+      const a = await r.json();
+      if (!a.approved) {
+        setDone({ ...base, state: "waiting", note: a.reason ?? a.error });
+        router.refresh();
+        return;
+      }
+    } catch {
+      setDone({ ...base, state: "waiting" });
+      return;
+    }
+    setDone({ ...base, state: "paying" });
+    const STATUS = ["None", "Open", "Confirmed", "Paid", "Frozen", "Voided"];
+    for (let i = 0; i < 40; i++) {
+      await new Promise((r) => setTimeout(r, 3000));
+      const t = (await publicClient.readContract({ ...st, functionName: "tickets", args: [BigInt(id)] })) as readonly unknown[];
+      const status = STATUS[Number(t[t.length - 1])];
+      if (status === "Paid") {
+        setDone({ ...base, state: "paid" });
+        router.refresh();
+        return;
+      }
+      if (status === "Frozen" || status === "Voided") break;
+    }
+    setDone({ ...base, state: "held", note: "The agent held this payment. Open it to see why." });
     router.refresh();
   }
 
@@ -106,19 +136,33 @@ export function QuickPay({ houseId, owner, symbol, maxTicket, houseName }: { hou
       `Hi ${c.name}, please confirm a payment for ${houseName}: ${done.amount} to ${done.to} (${done.what}).\n\nOpen your link and tap Confirm:\n${c.link}`;
     return (
       <section className="card border-forest p-6">
-        <h2 className="display text-2xl">Payment #{done.id} is ready ✓</h2>
+        <h2 className="display text-2xl">
+          {done.state === "paid"
+            ? `Paid ✓ ${done.amount} to ${done.to}`
+            : done.state === "approving"
+              ? "Checking the payment…"
+              : done.state === "paying"
+                ? "Approved. The agent is paying…"
+                : done.state === "held"
+                  ? `Payment #${done.id} is on hold`
+                  : `Payment #${done.id} is waiting for your confirmer`}
+        </h2>
         <p className="mt-1 text-ink-2">
-          {done.amount} to {done.to} is locked in. It goes out as soon as your confirmer taps Confirm.
+          {done.state === "paid"
+            ? "Done. The payment page is the receipt: share it with them."
+            : done.state === "approving" || done.state === "paying"
+              ? "Screening the wallet, checking your budget, then paying. Usually under a minute."
+              : done.note ?? `${done.amount} to ${done.to} is locked in. It goes out as soon as your confirmer taps Confirm.`}
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
-          {confirmers.map((c) => (
+          {done.state === "waiting" && confirmers.map((c) => (
             <a key={c.address} className="btn" href={whatsapp(nudge(c))} target="_blank" rel="noreferrer">
               Ask {c.name} to confirm
             </a>
           ))}
-          {confirmers.length === 0 && <p className="text-sm text-muted">Add a confirmer below, then send them their link.</p>}
-          <a className="btn btn-quiet" href={`/t/${done.id}`}>
-            View payment
+          {done.state === "waiting" && confirmers.length === 0 && <p className="w-full text-sm text-muted">Add a confirmer below and send them their link, or turn on Auto-approve.</p>}
+          <a className={done.state === "paid" ? "btn" : "btn btn-quiet"} href={`/t/${done.id}`}>
+            {done.state === "paid" ? "Open receipt" : "View payment"}
           </a>
           <button className="btn btn-quiet" onClick={() => setDone(null)}>
             Pay someone else
@@ -132,7 +176,7 @@ export function QuickPay({ houseId, owner, symbol, maxTicket, houseName }: { hou
   return (
     <section className="card border-forest p-6">
       <h2 className="display text-2xl">Pay someone</h2>
-      <p className="mt-1 text-sm text-muted">Fill three boxes and tap Pay. Your confirmer taps Confirm on their link, and the agent sends the money.</p>
+      <p className="mt-1 text-sm text-muted">Paste their wallet, the amount and what it's for, then tap Pay. Within your auto-approve limit it's paid in about 30 seconds; bigger payments wait for your confirmer.</p>
       <div className="mt-4 grid gap-3 sm:grid-cols-[2fr_1fr]">
         <input className="field figure" placeholder="Their wallet address 0x…" value={payee} onChange={(e) => setPayee(e.target.value)} aria-label="Their wallet address" />
         <input className="field figure" placeholder={`Amount in ${symbol}, e.g. 0.10`} inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} aria-label="Amount" />

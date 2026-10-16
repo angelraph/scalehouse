@@ -98,6 +98,8 @@ export function CutForm({ houseId, symbol, maxTicket, rates }: Props) {
     });
     if (!receipt) return;
     const [ev] = parseEventLogs({ abi: scaleTicketAbi, logs: receipt.logs, eventName: "TicketCut" });
+    // If the owner's auto-approve rule covers it, it gets confirmed without waiting for a person.
+    void fetch("/api/auto-approve", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ticketId: Number(ev.args.ticketId) }), keepalive: true }).catch(() => undefined);
     router.push(`/t/${ev.args.ticketId}`);
   }
 

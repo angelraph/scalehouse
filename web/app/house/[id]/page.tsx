@@ -5,6 +5,7 @@ import { AppointAgent } from "@/components/AppointAgent";
 import { ConfirmAll } from "@/components/ConfirmAll";
 import { QuickPay } from "@/components/QuickPay";
 import { Confirmers } from "@/components/Confirmers";
+import { AutoApprove } from "@/components/AutoApprove";
 import { RunAgentButton } from "@/components/RunAgentButton";
 import { AgentBrief } from "@/components/AgentBrief";
 import { Stamp } from "@/components/Stamp";
@@ -108,7 +109,10 @@ export default async function HousePage({ params, searchParams }: { params: Prom
       )}
 
       {agentAppointed && <QuickPay houseId={id} owner={house.owner} symbol={symbol} maxTicket={house.maxTicket.toString()} houseName={name} />}
-      <Confirmers houseId={id} owner={house.owner} houseName={name} />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <AutoApprove houseId={id} owner={house.owner} symbol={symbol} />
+        <Confirmers houseId={id} owner={house.owner} houseName={name} />
+      </div>
 
       <section className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
         <div>
