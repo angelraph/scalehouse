@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Stamp } from "@/components/Stamp";
 import { WitnessPanel } from "@/components/WitnessPanel";
 import { ShareConfirm } from "@/components/ShareConfirm";
+import { ReceiptBanner } from "@/components/ReceiptBanner";
 import { readHouse, readTicket } from "@/lib/chain";
 import { evidencePhotoUrl, sql } from "@/lib/db";
 import { grossOf, money, qty, short } from "@/lib/format";
@@ -57,6 +58,21 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
         </div>
         <Stamp status={ticket.status} />
       </div>
+
+      {ticket.status === "Paid" && (
+        <ReceiptBanner
+          ticketId={id}
+          amount={money(grossOf(ticket.confirmedQuantity || ticket.quantity, ticket.unitPrice), symbol)}
+          payee={label(ticket.payee)}
+          house={name}
+          what={ev?.note && !/^\s*[\d.]+\s*$/.test(ev.note) ? ev.note.slice(0, 80) : ev?.reference}
+          when={ticket.settledAt ? new Date(ticket.settledAt * 1000).toUTCString().replace(" GMT", " UTC") : "just now"}
+          txUrl={(() => {
+            const rel = events.find((e) => e.name === "TicketReleased");
+            return rel ? explorerTx(rel.tx_hash) : undefined;
+          })()}
+        />
+      )}
 
       {ticket.status === "Open" && (
         <div className="grid gap-4 lg:grid-cols-2">
