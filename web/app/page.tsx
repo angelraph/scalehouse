@@ -18,14 +18,14 @@ export const dynamic = "force-dynamic";
 
 const RULES = [
   ["The payee is locked when the ticket is cut.", "Nobody types a wallet at payment time: not the clerk, not the owner, not the agent.", "lock"],
-  ["A second person counts.", "Whoever cut the ticket or gets paid by it can't witness it. Neither can the agent.", "eye"],
+  ["A second check before money moves.", "Small payments: an automatic check (screened wallet, within your rule). Bigger ones: a one-tap confirm from a person you choose. Never the agent.", "eye"],
   ["The contract does the sum.", "Confirmed quantity × the posted price. The agent's number is checked, never trusted.", "sum"],
   ["A ticket pays once.", "A retry, a duplicate invoice, the same delivery note twice: refused, in public.", "one"],
   ["A mismatch freezes. It never rounds.", "Wrong wallet or wrong amount from the agent stops the ticket and says why.", "stop"],
 ] as const;
 
 const STACK = [
-  { name: "Your business", note: "Owner, clerks and witnesses" },
+  { name: "Your business", note: "One wallet, plus confirmers if you want them" },
   { name: "Scalehouse agent", note: "Decides when to pay, explains why" },
   { name: "ScaleTicket contract", note: "Decides what is owed, and to whom" },
   { name: "USDC and EURC by Circle", note: "Money that settles like a message" },
@@ -90,25 +90,25 @@ export default async function Home() {
         </div>
         <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_1fr]">
           <Reveal>
-            <span className="tag">Evidence-locked payments on {chain.name}</span>
+            <span className="tag">USDC payments for businesses and AI agents · {chain.name}</span>
             <h1 className="display mt-6 text-[2.75rem] sm:text-7xl lg:text-[5.6rem]">
               Weighed in public.
               <br />
               <span className="italic text-forest">Paid once.</span>
             </h1>
             <p className="mt-7 max-w-xl text-lg leading-relaxed text-ink-2">
-              <span className="text-ink">Spending limits stop an AI agent overspending. They don&apos;t stop it paying the wrong person.</span>{" "}
-              Scalehouse locks every payment to its evidence: the payee is fixed when the ticket is cut, a second person counts, and a
-              contract pays once, or freezes in public.
+              <span className="text-ink">Pay anyone in USDC in about 30 seconds, from one wallet.</span> Before any money moves, an AI agent
+              checks it: reads the invoice, screens the wallet, catches duplicates and overcharges. Then a contract makes sure it can only go to
+              the right person, for the right amount, once.
             </p>
             <div className="mt-9 flex flex-wrap gap-3">
               <Link href="/house/new" className="btn">
-                Open a house
+                Start paying, 1 minute
                 <span aria-hidden>→</span>
               </Link>
-              <Link href="/board" className="btn btn-quiet bg-sheet/70 backdrop-blur">
-                See every ticket
-              </Link>
+              <a href="https://scalehouse-testnet.vercel.app/attack" className="btn btn-quiet bg-sheet/70 backdrop-blur">
+                Try to trick the agent
+              </a>
             </div>
           </Reveal>
           <MoneyFlow f={flow} />
@@ -175,7 +175,7 @@ export default async function Home() {
               reasoning checked against the hash it put on-chain.
             </p>
             <div className="mt-6 flex flex-wrap gap-2 text-xs">
-              {["Payee locked", "Second witness", "Paid once", "Reasoning on record"].map((x) => (
+              {["Payee locked", "Second check", "Paid once", "Reasoning on record"].map((x) => (
                 <span key={x} className="rounded-full bg-paper-2 px-3 py-1.5 text-ink-2">
                   {x}
                 </span>
@@ -191,20 +191,21 @@ export default async function Home() {
       {/* Limits vs evidence: the positioning, side by side */}
       <section>
         <Reveal>
-          <span className="tag">Why not just limits?</span>
+          <span className="tag">Why not just send from your wallet?</span>
           <h2 className="two-tone mt-5 max-w-3xl text-3xl sm:text-4xl">
-            A budget answers &ldquo;how much&rdquo;. <em>Scalehouse also answers &ldquo;to whom, for what, and did it really arrive&rdquo;.</em>
+            Just as fast. <em>But every payment is checked, explained, and impossible to send twice or to the wrong wallet.</em>
           </h2>
         </Reveal>
         <div className="mt-10 grid gap-4 md:grid-cols-2">
           <Reveal className="tile p-7">
-            <div className="eyebrow !text-muted">Agent with spending limits</div>
+            <div className="eyebrow !text-muted">A plain wallet send</div>
             <ul className="mt-4 space-y-3 text-ink-2">
               {[
-                "Stops it spending more than $X a day",
-                "Pays any allowed wallet the agent names",
-                "Pays an invoice twice if it's presented twice",
-                "Can't tell 10 bags delivered from 12 claimed",
+                "Fast",
+                "No record of what the money was for",
+                "The same invoice can be paid twice",
+                "A fake \u201cwe changed our wallet\u201d invoice gets paid",
+                "Giving an AI agent your key means trusting it with everything",
               ].map((x, i) => (
                 <li key={x} className="flex gap-3">
                   <span className={i === 0 ? "text-forest" : "text-red"}>{i === 0 ? "✓" : "✕"}</span>
@@ -219,10 +220,12 @@ export default async function Home() {
               <div className="eyebrow !text-lime">Scalehouse</div>
               <ul className="mt-4 space-y-3">
                 {[
-                  "Daily, per-ticket and per-person limits too",
-                  "Pays only the wallet locked on the ticket",
-                  "One document, one ticket, paid once",
-                  "A second person counts; the AI reads the invoice and flags overcharges",
+                  "Just as fast: about 30 seconds, one wallet",
+                  "Every payment has a reason and a public receipt",
+                  "One invoice, one payment, enforced on-chain",
+                  "The AI reads invoices and flags wrong wallets and overcharges",
+                  "The agent can only pay what's recorded, within your daily budget",
+                  "Bigger payments wait for a one-tap confirm from someone you trust, no wallet needed",
                 ].map((x) => (
                   <li key={x} className="flex gap-3">
                     <span className="text-lime">✓</span>

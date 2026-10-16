@@ -26,9 +26,9 @@ const STEPS = [
     ],
   },
   {
-    who: "Witness",
-    title: "Count it again",
-    body: "A second person counts and signs what they saw. Free, no gas. Too far from the claim and the ticket freezes for the owner.",
+    who: "Check",
+    title: "A second check",
+    body: "Small payments: an automatic check signs once the wallet screens clear and it fits your rule. Bigger ones: a person you trust taps Confirm on a link. Free, no wallet. A count that doesn't match freezes the ticket.",
     code: [
       { text: "confirmBySig(ticket, ", cls: "text-white/70" },
       { text: "counted", cls: "text-lime" },
