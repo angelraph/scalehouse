@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { OwnerPanel } from "@/components/OwnerPanel";
 import { AppointAgent } from "@/components/AppointAgent";
 import { ConfirmAll } from "@/components/ConfirmAll";
+import { QuickPay } from "@/components/QuickPay";
 import { RunAgentButton } from "@/components/RunAgentButton";
 import { AgentBrief } from "@/components/AgentBrief";
 import { Stamp } from "@/components/Stamp";
@@ -104,6 +105,8 @@ export default async function HousePage({ params, searchParams }: { params: Prom
           <AppointAgent houseId={id} owner={house.owner} />
         </div>
       )}
+
+      {agentAppointed && <QuickPay houseId={id} owner={house.owner} symbol={symbol} maxTicket={house.maxTicket.toString()} />}
 
       <section className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
         <div>
