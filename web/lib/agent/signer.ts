@@ -58,7 +58,7 @@ function circleSigner(): AgentSigner {
   const circle = initiateDeveloperControlledWalletsClient({
     // The live key is used on mainnet; the TEST key on testnet.
     apiKey: (networkName === "mainnet" ? process.env.CIRCLEMAINNET_API_KEY : undefined) || process.env.CIRCLE_API_KEY!,
-    entitySecret: process.env.CIRCLE_ENTITY_SECRET!,
+    entitySecret: ((networkName === "mainnet" ? process.env.CIRCLEMAINNET_ENTITY_SECRET : undefined) || process.env.CIRCLE_ENTITY_SECRET)!,
   });
 
   return {

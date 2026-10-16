@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { initiateDeveloperControlledWalletsClient } from "@circle-fin/developer-controlled-wallets";
+import { initiateDeveloperControlledWalletsClient, registerEntitySecretCiphertext } from "@circle-fin/developer-controlled-wallets";
 import { networkName } from "@/lib/network";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +15,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const apiKey = (networkName === "mainnet" ? process.env.CIRCLEMAINNET_API_KEY : undefined) || process.env.CIRCLE_API_KEY;
-  const entitySecret = process.env.CIRCLE_ENTITY_SECRET;
+  const body = (await req.json().catch(() => ({}))) as { registerEntitySecret?: string };
+  if (body.registerEntitySecret) {
+    // One-time: register a fresh entity secret with this key's entity. Returns the recovery file.
+    try {
+      const r = await registerEntitySecretCiphertext({ apiKey: apiKey!, entitySecret: body.registerEntitySecret });
+      return NextResponse.json({ registered: true, recoveryFile: r.data?.recoveryFile ?? null });
+    } catch (e) {
+      const err = e as { response?: { data?: unknown }; message: string };
+      return NextResponse.json({ error: err.message, detail: err.response?.data ?? null }, { status: 500 });
+    }
+  }
+  const entitySecret = (networkName === "mainnet" ? process.env.CIRCLEMAINNET_ENTITY_SECRET : undefined) || process.env.CIRCLE_ENTITY_SECRET;
   if (!apiKey || !entitySecret) return NextResponse.json({ error: "Circle key or entity secret missing" }, { status: 503 });
 
   const blockchain = networkName === "mainnet" ? "ARC" : "ARC-TESTNET";
