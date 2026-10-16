@@ -32,10 +32,19 @@ async function ensureTable() {
   ready = true;
 }
 
-export async function autoLimit(houseId: number): Promise<bigint> {
+async function autoLimitRow(houseId: number): Promise<bigint | null> {
   await ensureTable();
   const rows = (await sql()`select auto_limit from sh_policies where chain_id = ${CHAIN_ID} and house_id = ${houseId}`) as { auto_limit: string }[];
-  return rows[0] ? BigInt(rows[0].auto_limit) : 0n;
+  return rows[0] ? BigInt(rows[0].auto_limit) : null;
+}
+
+/** The house's auto-approve limit: the owner's saved rule, else (once the checker holds its role) the per-payment maximum. */
+export async function autoLimit(houseId: number): Promise<bigint> {
+  const saved = await autoLimitRow(houseId);
+  if (saved != null) return saved;
+  const checker = await checkerOf(houseId);
+  if (!checker || ((await readRoles(houseId, checker.address)) & 2) === 0) return 0n;
+  return (await readHouse(houseId))?.maxTicket ?? 0n;
 }
 
 export async function setAutoLimit(houseId: number, limit: bigint) {
@@ -61,7 +70,8 @@ export async function tryAutoApprove(ticketId: number): Promise<AutoResult> {
   const house = await readHouse(ticket.houseId);
   if (!house) return { approved: false, reason: "Unknown house" };
 
-  const limit = await autoLimit(house.id);
+  const saved = await autoLimitRow(house.id);
+  const limit = saved ?? house.maxTicket;
   const amount = grossOf(ticket.quantity, ticket.unitPrice);
   if (limit === 0n) return { approved: false, reason: "Auto-approve is off. Your confirmer needs to confirm it." };
   if (amount > limit) return { approved: false, reason: `${money(amount)} is above your auto-approve limit of ${money(limit)}, so your confirmer needs to confirm it.` };

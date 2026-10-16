@@ -31,7 +31,7 @@ export default async function CutPage({ params }: { params: Promise<{ id: string
         </p>
       </div>
       {active.length === 0 ? (
-        <div className="card p-6 text-muted">The owner hasn&apos;t posted any prices yet. Tickets are always cut against a posted price.</div>
+        <div className="card p-6 text-muted">No price list yet. To pay someone right now, use <strong>Pay someone</strong> on your house page.</div>
       ) : (
         <CutForm
           houseId={id}

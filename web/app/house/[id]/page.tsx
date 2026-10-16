@@ -72,7 +72,7 @@ export default async function HousePage({ params, searchParams }: { params: Prom
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href={`/house/${id}/cut`} className="btn">
-            Cut a ticket
+            Pay from an invoice photo
           </Link>
           {agentAppointed && <RunAgentButton houseId={id} />}
         </div>

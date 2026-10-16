@@ -4,7 +4,8 @@ import { autoLimit, checkerOf, setAutoLimit, tryAutoApprove } from "@/lib/autoap
 import { publicClient, readHouse } from "@/lib/chain";
 import { money, toUnits } from "@/lib/format";
 import { confirmersMessage } from "@/lib/messages";
-import { CHAIN_ID } from "@/lib/network";
+import { scaleTicketAbi } from "@/lib/abi";
+import { CHAIN_ID, scaleTicketAddress } from "@/lib/network";
 
 export const maxDuration = 300;
 
@@ -36,6 +37,18 @@ export async function POST(req: Request) {
       const checker = await checkerOf(houseId, limit > 0n);
       await setAutoLimit(houseId, limit);
       return NextResponse.json({ limit: limit.toString(), label: money(limit), checker: checker?.address ?? null });
+    } catch (e) {
+      return bad((e as Error).message.split("\n")[0], 500);
+    }
+  }
+
+  if (body.action === "prepare") {
+    // Only for the very next house id, and at most one checker per house.
+    const next = (await publicClient.readContract({ address: scaleTicketAddress, abi: scaleTicketAbi, functionName: "houseCount" })) + 1n;
+    if (BigInt(body.houseId ?? 0) !== next) return bad("Only the next house can be prepared", 409);
+    try {
+      const checker = await checkerOf(Number(next), true);
+      return NextResponse.json({ houseId: next.toString(), checker: checker!.address });
     } catch (e) {
       return bad((e as Error).message.split("\n")[0], 500);
     }
