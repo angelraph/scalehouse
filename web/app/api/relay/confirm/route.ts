@@ -1,11 +1,6 @@
-import { after, NextResponse } from "next/server";
-import { decodeEventLog, getAddress, isAddress, isHex } from "viem";
-import { scaleTicketAbi } from "@/lib/abi";
-import { publicClient, readHouse, readRoles, readTicket } from "@/lib/chain";
-import { agentSigner } from "@/lib/agent/signer";
-import { runAgent } from "@/lib/agent/run";
-import { confirmTypedData } from "@/lib/typed";
-import { houseTeam } from "@/lib/house";
+import { NextResponse } from "next/server";
+import { getAddress, isAddress, isHex } from "viem";
+import { RelayError, relayConfirm } from "@/lib/relay";
 
 export const maxDuration = 300;
 
@@ -17,61 +12,20 @@ export const maxDuration = 300;
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   if (!body) return bad("Bad request");
-  const ticketId = Number(body.ticketId);
-  const observed = BigInt(String(body.observedQuantity ?? "0"));
-  const deadline = BigInt(String(body.deadline ?? "0"));
   if (!isAddress(body.witness ?? "") || !isHex(body.signature ?? "")) return bad("Missing witness or signature");
-  const witness = getAddress(body.witness);
-
-  const ticket = await readTicket(ticketId);
-  if (!ticket) return bad("Unknown ticket", 404);
-  if (ticket.status !== "Open") return bad(`This ticket is ${ticket.status.toLowerCase()}, not waiting for a witness`, 409);
-  if (((await readRoles(ticket.houseId, witness)) & 2) === 0) {
-    const witnesses = (await houseTeam(ticket.houseId)).filter((m) => m.roles & 2).map((m) => `${m.address.slice(0, 6)}…${m.address.slice(-4)}`);
-    return bad(
-      `The connected wallet (${witness.slice(0, 6)}…${witness.slice(-4)}) isn't a witness in this house. ` +
-        (witnesses.length ? `Switch your wallet to ${witnesses.join(" or ")} and sign again.` : "The owner hasn't added a witness yet."),
-      403,
-    );
+  try {
+    const r = await relayConfirm({
+      ticketId: Number(body.ticketId),
+      observed: BigInt(String(body.observedQuantity ?? "0")),
+      witness: getAddress(body.witness),
+      deadline: BigInt(String(body.deadline ?? "0")),
+      signature: body.signature,
+    });
+    return NextResponse.json({ txHash: r.txHash, result: r.result });
+  } catch (e) {
+    if (e instanceof RelayError) return bad(e.message, e.status);
+    throw e;
   }
-  if ([ticket.issuer, ticket.payee].some((a) => a.toLowerCase() === witness.toLowerCase())) {
-    return bad("The person who cut the ticket or gets paid by it can't also witness it", 403);
-  }
-
-  const valid = await publicClient.verifyTypedData({
-    address: witness,
-    signature: body.signature,
-    ...confirmTypedData({ ticketId: BigInt(ticketId), observedQuantity: observed, payee: ticket.payee, evidenceHash: ticket.evidenceHash, deadline }),
-  });
-  if (!valid) return bad("Signature does not match this witness and ticket", 401);
-
-  const receipt = await agentSigner().write("confirmBySig", [BigInt(ticketId), observed, witness, deadline, body.signature]);
-
-  let result = "confirmed";
-  for (const log of receipt.logs) {
-    try {
-      const ev = decodeEventLog({ abi: scaleTicketAbi, data: log.data, topics: log.topics });
-      if (ev.eventName === "TicketFrozen") result = "frozen";
-    } catch {
-      // other contract's log
-    }
-  }
-
-  // A confirmed ticket is the moment money can move: wake the agent for this house.
-  if (result === "confirmed") {
-    const house = await readHouse(ticket.houseId);
-    if (house && house.agent.toLowerCase() === agentSigner().address.toLowerCase()) {
-      after(async () => {
-        try {
-          await runAgent(ticket.houseId, `ticket #${ticketId} confirmed by witness`);
-        } catch (err) {
-          console.error("agent run after confirm failed", err);
-        }
-      });
-    }
-  }
-
-  return NextResponse.json({ txHash: receipt.transactionHash, result });
 }
 
 function bad(error: string, status = 400) {

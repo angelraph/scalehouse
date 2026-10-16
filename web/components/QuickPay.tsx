@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getAddress, isAddress, parseEventLogs, type Abi, type Address, type Hex } from "viem";
 import { useWallet } from "./Providers";
 import { useTx } from "./useTx";
+import { loadConfirmers, whatsapp, type LinkConfirmer } from "./confirmerStore";
 import { scaleTicketAbi } from "@/lib/abi";
 import { money, rateIdOf, short, toUnits } from "@/lib/format";
 import { scaleTicketAddress } from "@/lib/network";
@@ -18,7 +19,7 @@ const st = { address: scaleTicketAddress, abi: scaleTicketAbi as Abi };
  * Then it opens the ticket, whose top card sends the confirm link. The second person still has
  * to confirm: that rule is the product.
  */
-export function QuickPay({ houseId, owner, symbol, maxTicket }: { houseId: number; owner: Address; symbol: string; maxTicket: string }) {
+export function QuickPay({ houseId, owner, symbol, maxTicket, houseName }: { houseId: number; owner: Address; symbol: string; maxTicket: string; houseName: string }) {
   const router = useRouter();
   const { address, publicClient } = useWallet();
   const { send, pending, error, setError } = useTx();
@@ -26,6 +27,15 @@ export function QuickPay({ houseId, owner, symbol, maxTicket }: { houseId: numbe
   const [amount, setAmount] = useState("");
   const [what, setWhat] = useState("");
   const [stage, setStage] = useState<string | null>(null);
+  const [done, setDone] = useState<{ id: number; amount: string; to: string; what: string } | null>(null);
+  const [confirmers, setConfirmers] = useState<LinkConfirmer[]>([]);
+
+  useEffect(() => {
+    const sync = () => setConfirmers(loadConfirmers(houseId));
+    sync();
+    window.addEventListener("scalehouse:confirmers", sync);
+    return () => window.removeEventListener("scalehouse:confirmers", sync);
+  }, [houseId]);
 
   if (!address || address.toLowerCase() !== owner.toLowerCase()) {
     return (
@@ -84,14 +94,45 @@ export function QuickPay({ houseId, owner, symbol, maxTicket }: { houseId: numbe
     const receipt = await send("Creating the payment", { ...st, functionName: "cut", args: [h, to, rateId, 1000n, body.evidenceHash as Hex] });
     if (!receipt) return;
     const [ev] = parseEventLogs({ abi: scaleTicketAbi, logs: receipt.logs, eventName: "TicketCut" });
-    router.push(`/t/${ev.args.ticketId}?new=1`);
+    setDone({ id: Number(ev.args.ticketId), amount: `${amount.trim()} ${symbol}`, to: short(to), what: what.trim() });
+    setPayee("");
+    setAmount("");
+    setWhat("");
+    router.refresh();
+  }
+
+  if (done) {
+    const nudge = (c: LinkConfirmer) =>
+      `Hi ${c.name}, please confirm a payment for ${houseName}: ${done.amount} to ${done.to} (${done.what}).\n\nOpen your link and tap Confirm:\n${c.link}`;
+    return (
+      <section className="card border-forest p-6">
+        <h2 className="display text-2xl">Payment #{done.id} is ready ✓</h2>
+        <p className="mt-1 text-ink-2">
+          {done.amount} to {done.to} is locked in. It goes out as soon as your confirmer taps Confirm.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {confirmers.map((c) => (
+            <a key={c.address} className="btn" href={whatsapp(nudge(c))} target="_blank" rel="noreferrer">
+              Ask {c.name} to confirm
+            </a>
+          ))}
+          {confirmers.length === 0 && <p className="text-sm text-muted">Add a confirmer below, then send them their link.</p>}
+          <a className="btn btn-quiet" href={`/t/${done.id}`}>
+            View payment
+          </a>
+          <button className="btn btn-quiet" onClick={() => setDone(null)}>
+            Pay someone else
+          </button>
+        </div>
+      </section>
+    );
   }
 
   const busy = !!pending || !!stage;
   return (
     <section className="card border-forest p-6">
       <h2 className="display text-2xl">Pay someone</h2>
-      <p className="mt-1 text-sm text-muted">Fill three boxes and tap once. Then send the confirm link to your second person. The agent pays when they confirm.</p>
+      <p className="mt-1 text-sm text-muted">Fill three boxes and tap Pay. Your confirmer taps Confirm on their link, and the agent sends the money.</p>
       <div className="mt-4 grid gap-3 sm:grid-cols-[2fr_1fr]">
         <input className="field figure" placeholder="Their wallet address 0x…" value={payee} onChange={(e) => setPayee(e.target.value)} aria-label="Their wallet address" />
         <input className="field figure" placeholder={`Amount in ${symbol}, e.g. 0.10`} inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} aria-label="Amount" />
