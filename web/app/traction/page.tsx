@@ -31,7 +31,7 @@ type HouseTuple = readonly [Address, Address, Address, Address, bigint, bigint, 
 
 async function load(net: Net) {
   const n = NETS[net];
-  const pc = createPublicClient({ chain: n.chain, transport: http(undefined, { retryCount: 2, timeout: 15_000 }) });
+  const pc = createPublicClient({ chain: n.chain, transport: http(undefined, { batch: { batchSize: 200 }, retryCount: 3, timeout: 20_000 }) });
   const st = { address: n.contract, abi: scaleTicketAbi } as const;
   const [ticketCount, houseCount] = await Promise.all([pc.readContract({ ...st, functionName: "ticketCount" }), pc.readContract({ ...st, functionName: "houseCount" })]);
   const tickets = await Promise.all(
@@ -45,15 +45,21 @@ async function load(net: Net) {
   const houses = await Promise.all(Array.from({ length: Number(houseCount) }, (_, i) => pc.readContract({ ...st, functionName: "houses", args: [BigInt(i + 1)] }).then((h) => (h as unknown as HouseTuple)[0])));
   const paid = tickets.filter((t) => t.status === "Paid");
   const usdc = paid.reduce((s, t) => s + grossOf(t.confirmed || t.quantity, t.unitPrice), 0n);
-  // "Outside" wallets: paid wallets that never acted as an owner, recorder or confirmer on this network.
+  // "Outside" wallets: paid wallets that never owned a house, recorded or confirmed, and hold no role in any house.
   const insiders = new Set([...houses, ...tickets.map((t) => t.issuer), ...tickets.map((t) => t.witness)].map((a) => a.toLowerCase()));
-  const outside = new Set(paid.map((t) => t.payee.toLowerCase()).filter((a) => !insiders.has(a)));
+  const payees = [...new Set(paid.map((t) => t.payee.toLowerCase()))].filter((a) => !insiders.has(a));
+  const roleChecks = await Promise.all(
+    payees.flatMap((a) => houses.map((_, h) => pc.readContract({ ...st, functionName: "roles", args: [BigInt(h + 1), a as Address] }).then((r) => (Number(r) > 0 ? a : null)))),
+  );
+  for (const a of roleChecks) if (a) insiders.add(a);
+  const outside = new Set(payees.filter((a) => !insiders.has(a)));
   const stopped = tickets.filter((t) => t.status === "Frozen").length;
   return { net, n, tickets, houses: houses.length, paid, usdc, outside: outside.size, stopped };
 }
 
 export default async function Traction() {
-  const [main, test] = await Promise.all([load("mainnet").catch(() => null), load("testnet").catch(() => null)]);
+  const main = await load("mainnet").catch((e) => (console.error("traction mainnet", e), null));
+  const test = await load("testnet").catch((e) => (console.error("traction testnet", e), null));
   return (
     <div className="space-y-16">
       <div>
@@ -67,6 +73,7 @@ export default async function Traction() {
         </p>
       </div>
 
+      {!main && <p className="text-sm text-muted">Mainnet numbers are loading slowly right now. Refresh in a minute, or see the board.</p>}
       {main && (
         <section>
           <div className="eyebrow">Arc mainnet · real USDC</div>
@@ -96,6 +103,7 @@ export default async function Traction() {
         </div>
       </section>
 
+      {!test && <p className="text-sm text-muted">Testnet numbers are loading slowly right now. Refresh in a minute, or see the testnet board.</p>}
       {test && (
         <section>
           <div className="eyebrow">Arc testnet · free to try</div>
