@@ -1,0 +1,12 @@
+[
+  { "id": "intro", "text": "This is Scalehouse." },
+  { "id": "hook", "text": "AI agents now hold wallets, and move real money. A spending limit stops an agent spending too much. It doesn't stop it paying the wrong person. Paying the same invoice twice. Or paying a fake one." },
+  { "id": "question", "text": "So what if every payment had to prove itself, before a single cent moved?" },
+  { "id": "pay", "text": "On Scalehouse, you pay anyone in USDC, from one wallet. Paste who, how much, and what for. Tap pay. The agent screens the wallet against Circle's USDC blocklist, checks your budget, and pays. In about thirty seconds." },
+  { "id": "receipt", "text": "Every payment leaves a receipt anyone can check. Who was paid, how much, what for, and why the agent approved it, with its reasoning hashed on chain." },
+  { "id": "lock", "text": "Here's why it can't go wrong. The wallet is locked the moment the payment is recorded. A second check confirms it: automatically for small amounts, or with one tap from someone you trust. Then the contract on Arc works out the amount itself, and pays the locked wallet. Once. The agent signs through a Circle wallet. It never holds a key." },
+  { "id": "attacks", "text": "Don't take our word for it. We hid an instruction in an invoice, telling the agent to pay an attacker. It ignored it. We hijacked the agent outright. The contract froze the payment. Ten times the amount? Frozen. Pay twice? Refused. Six attacks. All stopped, live. And you can run them yourself." },
+  { "id": "people", "text": "And it's already moving real money. Three people, paid on mainnet, each in under thirty seconds. Here's what they said." },
+  { "id": "different", "text": "What makes Scalehouse different? It's as fast as a wallet send. It can't pay the wrong person, or pay twice. And it's built on Circle and Arc: USDC, Circle wallets, and blocklist screening, end to end." },
+  { "id": "outro", "text": "Scalehouse. Weighed in public. Paid once." }
+]
