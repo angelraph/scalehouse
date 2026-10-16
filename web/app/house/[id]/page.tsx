@@ -96,7 +96,9 @@ export default async function HousePage({ params, searchParams }: { params: Prom
 
       {!agentAppointed && (
         <div className="card border-bronze p-4 text-sm">
-          This house hasn&apos;t appointed the Scalehouse agent, so nothing here is paid automatically.
+          {/^0x0{40}$/i.test(house.agent)
+            ? <>This house hasn&apos;t appointed the Scalehouse agent, so nothing here is paid automatically.</>
+            : <>Scalehouse moved its agent to a Circle-secured wallet. The owner switches to it with one tap below; until then nothing here is paid automatically.</>}
         </div>
       )}
 

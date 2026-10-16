@@ -78,6 +78,7 @@ function Panel(p: Props) {
       <div className="grid gap-4 lg:grid-cols-2">
         {!p.agentAppointed && (
           <Card title="Appoint the Scalehouse agent">
+            <p className="mb-3 text-sm text-muted">The agent signs with a Circle Developer-Controlled Wallet. It can call only this contract, and only for your house.</p>
             <button
               className="btn"
               onClick={async () => (await send("Appointing the agent", { ...st, functionName: "setAgent", args: [h, agentAddress] })) && done("Agent appointed")}
