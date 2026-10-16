@@ -47,6 +47,7 @@ export async function POST(req: Request) {
   const witness = privateKeyToAccount(witnessKey);
   const agent = agentSigner();
   const steps: Step[] = [];
+  if (agent.backend === "circle") steps.push({ text: `The agent signs with a Circle Developer-Controlled Wallet (${agent.address.slice(0, 6)}…${agent.address.slice(-4)}). No private key sits in this server.`, tone: "info" });
 
   const wait = async (hash: Hex) => {
     const r = await publicClient.waitForTransactionReceipt({ hash });
