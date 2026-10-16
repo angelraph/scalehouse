@@ -176,6 +176,11 @@ export default function NewHouse() {
             {busy ?? "Open the house"}
           </button>
           <p className="-mt-3 text-center text-xs text-muted">One approval in wallets that support batching, otherwise five quick ones. About a cent each.</p>
+          {busy && busy !== "Preparing" && (
+            <p className="rounded-xl bg-paper-2 p-3 text-center text-sm">
+              Nothing popped up? Click your wallet&apos;s icon in the browser toolbar. The request is waiting there.
+            </p>
+          )}
 
           {steps.length > 0 && (
             <ol className="space-y-1.5 text-sm">
