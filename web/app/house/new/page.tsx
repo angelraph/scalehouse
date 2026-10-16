@@ -42,6 +42,7 @@ export default function NewHouse() {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [steps, setSteps] = useState<{ label: string; done: boolean }[]>([]);
+  const [openedId, setOpenedId] = useState<bigint | null>(null);
 
   // /house/new?preset=testers: sensible defaults for builders paying testers.
   useEffect(() => {
@@ -109,6 +110,7 @@ export default function NewHouse() {
           const r = await publicClient.waitForTransactionReceipt({ hash });
           if (r.status !== "success") throw new Error(`"${calls[i].label}" didn't go through`);
           setSteps((s) => s.map((x, j) => (j === i ? { ...x, done: true } : x)));
+          if (i === 0) setOpenedId(houseId);
         }
       }
       router.push(`/house/${houseId}?new=1`);
@@ -185,6 +187,14 @@ export default function NewHouse() {
             </ol>
           )}
           {error && <p className="text-sm text-red">{error}</p>}
+          {openedId != null && (
+            <p className="text-sm">
+              Your house is already open. If your wallet stopped asking,{" "}
+              <a className="link font-semibold" href={`/house/${openedId}?new=1`}>
+                finish on your house page →
+              </a>
+            </p>
+          )}
         </div>
       </RequireWallet>
     </div>
