@@ -60,6 +60,9 @@ export const tokenSymbol = (token: string): string => {
   return "TOKEN";
 };
 
+/** Absolute site address, so shared links work outside the browser (WhatsApp, email). */
+export const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || (isMainnet ? "https://scalehouse-app.vercel.app" : "https://scalehouse-testnet.vercel.app")).replace(/\/$/, "");
+
 export const explorerTx = (hash: string) => `${chain.blockExplorers.default.url}/tx/${hash}`;
 export const explorerAddress = (addr: string) => `${chain.blockExplorers.default.url}/address/${addr}`;
 

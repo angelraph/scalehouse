@@ -1,15 +1,29 @@
 "use client";
 
 import { useState } from "react";
+import { siteUrl } from "@/lib/network";
 
 /**
  * After a ticket is cut, the clerk sends the confirmer one link. Opening it shows the ticket
  * and a single "Sign my count" button: no house page, no menus.
  */
-export function ShareConfirm({ ticketId, what, amount }: { ticketId: number; what: string; amount: string }) {
+export function ShareConfirm({ ticketId, house, what, reference, amount, payee }: { ticketId: number; house: string; what: string; reference?: string; amount: string; payee: string }) {
   const [copied, setCopied] = useState(false);
-  const url = typeof window !== "undefined" ? `${window.location.origin}/t/${ticketId}` : `/t/${ticketId}`;
-  const text = `Please confirm Scalehouse ticket #${ticketId}: ${what}, ${amount}. Count it yourself, then tap "Sign my count" (free): ${url}`;
+  const url = `${siteUrl}/t/${ticketId}`;
+  const text = [
+    "Hi! Can you confirm this for me on Scalehouse? 🙏",
+    "",
+    `🧾 Ticket #${ticketId} · ${house}`,
+    `📦 ${what}${reference ? ` (ref: ${reference})` : ""}`,
+    `💵 ${amount} to ${payee}`,
+    "",
+    "What to do (1 minute, free for you):",
+    `1. Open this link: ${url}`,
+    '2. Tap "Connect" and pick your wallet',
+    '3. Check the quantity, then tap "Sign my count"',
+    "",
+    "Nothing gets paid until you sign. Thank you!",
+  ].join("\n");
 
   return (
     <div className="card relative overflow-hidden p-5">
