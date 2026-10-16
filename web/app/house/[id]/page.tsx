@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { OwnerPanel } from "@/components/OwnerPanel";
+import { AppointAgent } from "@/components/AppointAgent";
 import { RunAgentButton } from "@/components/RunAgentButton";
 import { AgentBrief } from "@/components/AgentBrief";
 import { Stamp } from "@/components/Stamp";
@@ -98,7 +99,8 @@ export default async function HousePage({ params, searchParams }: { params: Prom
         <div className="card border-bronze p-4 text-sm">
           {/^0x0{40}$/i.test(house.agent)
             ? <>This house hasn&apos;t appointed the Scalehouse agent, so nothing here is paid automatically.</>
-            : <>Scalehouse moved its agent to a Circle-secured wallet. The owner switches to it with one tap below; until then nothing here is paid automatically.</>}
+            : <>Scalehouse moved its agent to a Circle-secured wallet. Until the owner switches to it, nothing here is paid automatically.</>}
+          <AppointAgent houseId={id} owner={house.owner} />
         </div>
       )}
 
