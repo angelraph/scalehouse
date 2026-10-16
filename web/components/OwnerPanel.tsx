@@ -6,7 +6,7 @@ import { getAddress, isAddress, keccak256, toBytes, type Abi, type Address } fro
 import { useWallet } from "./Providers";
 import { useTx } from "./useTx";
 import { scaleTicketAbi } from "@/lib/abi";
-import { money, rateIdOf, toUnits } from "@/lib/format";
+import { money, rateIdOf, short, toUnits } from "@/lib/format";
 import { labelMessage } from "@/lib/messages";
 import { agentAddress, scaleTicketAddress } from "@/lib/network";
 import { REASON_TEXT, type ReasonName } from "@/lib/types";
@@ -38,7 +38,18 @@ interface Props {
 /** Everything only the house owner can do. Rendered for everyone, shown only to the owner. */
 export function OwnerPanel(p: Props) {
   const { address } = useWallet();
-  if (!address || address.toLowerCase() !== p.owner.toLowerCase()) return null;
+  if (!address || address.toLowerCase() !== p.owner.toLowerCase()) {
+    return (
+      <section className="card border-bronze p-5 text-sm">
+        <div className="font-semibold">Owner controls are hidden</div>
+        <p className="mt-1 text-muted">
+          {address ? `This browser is connected as ${short(address)}, which isn't this house's owner. ` : "No wallet is connected. "}
+          To post prices or change the budget or team, open your wallet, switch to the owner account{" "}
+          <span className="figure text-ink">{short(p.owner)}</span>, then come back here.
+        </p>
+      </section>
+    );
+  }
   return <Panel {...p} />;
 }
 
