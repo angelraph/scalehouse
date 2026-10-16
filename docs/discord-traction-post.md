@@ -21,4 +21,4 @@ Every tester gets a public receipt, and the same report can't be paid twice. Rea
 
 📖 Full guide (getting paid and paying): https://scalehouse-app.vercel.app/guide
 🌐 App: https://scalehouse-app.vercel.app
-🧵 X thread: <paste your X post link here>
+🧵 Full thread with the setup guide: https://x.com/RaphElevator/status/2110922951621022174

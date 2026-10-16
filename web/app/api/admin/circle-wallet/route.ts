@@ -19,7 +19,7 @@ export async function POST(req: Request) {
   if (body.registerEntitySecret) {
     // One-time: register a fresh entity secret with this key's entity. Returns the recovery file.
     try {
-      const r = await registerEntitySecretCiphertext({ apiKey: apiKey!, entitySecret: body.registerEntitySecret });
+      const r = await registerEntitySecretCiphertext({ apiKey: apiKey!, entitySecret: body.registerEntitySecret, recoveryFileDownloadPath: "/tmp" });
       return NextResponse.json({ registered: true, recoveryFile: r.data?.recoveryFile ?? null });
     } catch (e) {
       const err = e as { response?: { data?: unknown }; message: string };
