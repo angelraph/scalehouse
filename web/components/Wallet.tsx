@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { useWallet } from "./Providers";
-import { chain } from "@/lib/network";
+import { chain, explorerAddress } from "@/lib/network";
 import { short } from "@/lib/format";
 
 export function WalletButton() {
@@ -30,10 +31,73 @@ export function WalletButton() {
     );
   }
 
+  return <WalletMenu address={address} name={activeName ?? "Wallet"} onDisconnect={disconnect} />;
+}
+
+/** The connected wallet: click to see the address, copy it, view it on the explorer, or disconnect. */
+function WalletMenu({ address, name, onDisconnect }: { address: string; name: string; onDisconnect: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent | KeyboardEvent) => {
+      if (e instanceof KeyboardEvent ? e.key === "Escape" : !ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", close);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", close);
+    };
+  }, [open]);
+
   return (
-    <button className="btn btn-quiet figure h-10 px-4 sm:h-11" onClick={disconnect} title={`${activeName ?? "Wallet"} · click to disconnect`}>
-      {short(address)}
-    </button>
+    <div ref={ref} className="relative">
+      <button className="btn btn-quiet figure h-10 gap-2 px-4 sm:h-11" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-haspopup="menu">
+        <span className="h-2 w-2 rounded-full bg-forest" aria-hidden />
+        {short(address)}
+        <span aria-hidden className="text-xs opacity-60">▾</span>
+      </button>
+      {open && (
+        <div role="menu" className="card absolute right-0 z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] !bg-paper p-4 shadow-xl">
+          <div className="text-xs text-muted">Connected with {name} · {chain.name}</div>
+          <div className="figure mt-2 break-all rounded-xl bg-paper-2 p-3 text-sm">{address}</div>
+          <div className="mt-3 grid gap-2">
+            <button
+              role="menuitem"
+              className="btn btn-quiet w-full justify-center"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(address);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                } catch {
+                  // clipboard blocked
+                }
+              }}
+            >
+              {copied ? "Copied ✓" : "Copy address"}
+            </button>
+            <a role="menuitem" className="btn btn-quiet w-full justify-center" href={explorerAddress(address)} target="_blank" rel="noreferrer">
+              View on explorer ↗
+            </a>
+            <button
+              role="menuitem"
+              className="btn btn-quiet w-full justify-center text-red"
+              onClick={() => {
+                setOpen(false);
+                onDisconnect();
+              }}
+            >
+              Disconnect
+            </button>
+          </div>
+          <p className="mt-3 text-xs text-muted">To use another account, switch it inside your wallet app. This page follows automatically.</p>
+        </div>
+      )}
+    </div>
   );
 }
 
