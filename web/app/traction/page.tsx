@@ -48,7 +48,7 @@ async function load(net: Net) {
   // "Outside" wallets: paid wallets that never owned a house, recorded or confirmed, and hold no role in any house.
   const insiders = new Set([...houses, ...tickets.map((t) => t.issuer), ...tickets.map((t) => t.witness)].map((a) => a.toLowerCase()));
   const payees = [...new Set(paid.map((t) => t.payee.toLowerCase()))].filter((a) => !insiders.has(a));
-  const roleChecks = await Promise.all(
+  const roleChecks = net !== "mainnet" ? [] : await Promise.all(
     payees.flatMap((a) => houses.map((_, h) => pc.readContract({ ...st, functionName: "roles", args: [BigInt(h + 1), a as Address] }).then((r) => (Number(r) > 0 ? a : null)))),
   );
   for (const a of roleChecks) if (a) insiders.add(a);
