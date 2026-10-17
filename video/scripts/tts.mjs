@@ -14,8 +14,19 @@ const instructions =
   "Slightly lower and slower on short punchy sentences like 'Once.' or 'Frozen.' so they land. Crisp consonants.";
 
 mkdirSync("public/vo", { recursive: true });
+// Only (re)generate the ids passed after the voice, e.g. `node scripts/tts.mjs ash home open`; keep the rest.
+const only = process.argv.slice(3);
+let prev = [];
+try {
+  prev = JSON.parse(readFileSync("src/vo.json", "utf8"));
+} catch {}
 const out = [];
 for (const l of lines) {
+  const old = prev.find((p) => p.id === l.id && p.text === l.text);
+  if (only.length && !only.includes(l.id) && old) {
+    out.push(old);
+    continue;
+  }
   const res = await fetch(`${SITE}/api/admin/tts`, {
     method: "POST",
     headers: { authorization: `Bearer ${secret}`, "content-type": "application/json" },

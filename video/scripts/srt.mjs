@@ -31,7 +31,8 @@ for (const t of timing) {
     }
   });
   txt.push(`[${ts(base).slice(3, 8)}] ${c.text}`);
-  frame += t.lead + Math.ceil(c.duration * FPS) + t.tail;
+  // Scenes overlap by OVERLAP frames for the crossfade (see src/Main.tsx).
+  frame += t.lead + Math.ceil(c.duration * FPS) + t.tail - 14;
 }
 mkdirSync("out", { recursive: true });
 writeFileSync("out/scalehouse-demo.srt", srt.join("\n"));

@@ -9,7 +9,7 @@ export const CLIPS = vo as Clip[];
 export const clip = (id: string) => CLIPS.find((c) => c.id === id)!;
 
 /** Per-scene timing: where the voiceover starts inside the scene, and word lookups in frames. */
-type SceneCtx = { clip: Clip; lead: number };
+type SceneCtx = { clip: Clip; lead: number; dur: number };
 const Ctx = createContext<SceneCtx | null>(null);
 export const SceneProvider = Ctx.Provider;
 export function useScene() {
@@ -30,7 +30,14 @@ export function useScene() {
     }
     throw new Error(`"${phrase}" (#${n}) not in ${s.clip.id}`);
   };
-  return { ...s, at, voEnd: s.lead + Math.round(s.clip.duration * FPS) };
+  const tryAt = (phrase: string, fallback: number, n = 1) => {
+    try {
+      return at(phrase, n);
+    } catch {
+      return fallback;
+    }
+  };
+  return { ...s, at, tryAt, voEnd: s.lead + Math.round(s.clip.duration * FPS) };
 }
 
 /** 0→1 spring starting at frame `from`. */

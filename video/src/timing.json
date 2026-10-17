@@ -1,12 +1,14 @@
 [
-  { "id": "intro", "lead": 110, "tail": 22 },
-  { "id": "hook", "lead": 16, "tail": 28 },
-  { "id": "question", "lead": 12, "tail": 24 },
-  { "id": "pay", "lead": 16, "tail": 54 },
-  { "id": "receipt", "lead": 12, "tail": 34 },
-  { "id": "lock", "lead": 22, "tail": 36 },
-  { "id": "attacks", "lead": 16, "tail": 36 },
-  { "id": "people", "lead": 12, "tail": 230 },
-  { "id": "different", "lead": 12, "tail": 40 },
-  { "id": "outro", "lead": 26, "tail": 110 }
+  { "id": "intro", "lead": 84, "tail": 14 },
+  { "id": "hook", "lead": 12, "tail": 16 },
+  { "id": "home", "lead": 12, "tail": 96 },
+  { "id": "open", "lead": 12, "tail": 26 },
+  { "id": "pay2", "lead": 10, "tail": 34 },
+  { "id": "receipt2", "lead": 10, "tail": 28 },
+  { "id": "confirm", "lead": 10, "tail": 32 },
+  { "id": "lock2", "lead": 16, "tail": 22 },
+  { "id": "attacks2", "lead": 10, "tail": 40 },
+  { "id": "people", "lead": 10, "tail": 120 },
+  { "id": "different2", "lead": 10, "tail": 24 },
+  { "id": "outro", "lead": 20, "tail": 64 }
 ]

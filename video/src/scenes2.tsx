@@ -29,8 +29,11 @@ function Arrow({ from, x1, x2, y, label, color, dashed }: { from: number; x1: nu
 }
 export function Lock() {
   const frame = useCurrentFrame();
-  const { at } = useScene();
-  const agentGlow = interpolate(frame, [at("Circle wallet") - 4, at("Circle wallet") + 10], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const { at, tryAt } = useScene();
+  const cw = tryAt("Circle wallet", tryAt("agent never", at("never holds")));
+  const auto = tryAt("automatically", at("confirms") + 8);
+  const tap = tryAt("one tap", at("confirms") + 26);
+  const agentGlow = interpolate(frame, [cw - 4, cw + 10], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const calc = useSpring(at("works out"));
   return (
     <AbsoluteFill>
@@ -56,13 +59,13 @@ export function Lock() {
       <Arrow from={at("locked")} x1={230} x2={960} y={360} label="record · payee 0x1F8e…7A49 · 0.10" color={C.paper} />
       {frame >= at("recorded") && <Stamp from={at("recorded")} text="🔒 Payee locked" color={C.gold} rotate={-4} size={28} style={{ position: "absolute", left: 990, top: 335 }} />}
       <Arrow from={at("second check")} x1={600} x2={960} y={480} label="confirm ✓" color={C.green} />
-      {frame >= at("automatically") && (
-        <Rise from={at("automatically")} style={{ position: "absolute", left: 380, top: 505, width: 440, textAlign: "center", fontFamily: mono, fontSize: 23, color: "rgba(255,254,242,0.8)" }}>
+      {frame >= auto && (
+        <Rise from={auto} style={{ position: "absolute", left: 380, top: 505, width: 440, textAlign: "center", fontFamily: mono, fontSize: 23, color: "rgba(255,254,242,0.8)" }}>
           small amounts: automatic
         </Rise>
       )}
-      {frame >= at("one tap") && (
-        <Rise from={at("one tap")} style={{ position: "absolute", left: 380, top: 540, width: 440, textAlign: "center", fontFamily: mono, fontSize: 23, color: "rgba(255,254,242,0.8)" }}>
+      {frame >= tap && (
+        <Rise from={tap} style={{ position: "absolute", left: 380, top: 540, width: 440, textAlign: "center", fontFamily: mono, fontSize: 23, color: "rgba(255,254,242,0.8)" }}>
           bigger: one tap, no wallet
         </Rise>
       )}
@@ -219,7 +222,7 @@ export function People() {
       </div>
       {frame >= swap &&
         QUOTES.map((q, i) => {
-          const f0 = swap + 8 + i * 62;
+          const f0 = swap + 4 + i * 34;
           const s = interpolate(frame, [f0, f0 + 14], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
           if (s <= 0) return null;
           return (
