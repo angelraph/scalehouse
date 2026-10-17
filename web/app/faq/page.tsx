@@ -7,9 +7,51 @@ export const metadata: Metadata = { title: "FAQ · Scalehouse", description: "Co
 
 const GROUPS: { title: string; items: [string, React.ReactNode][] }[] = [
   {
+    title: "Before you use Scalehouse",
+    items: [
+      [
+        "How is this different from a bank transfer or a card payment?",
+        "Banks and cards mostly check that you are you and that you have the money. They don't check whether the payment itself is right: the correct person, the agreed amount, not paid already. Scalehouse checks the payment before it moves. The receiver's wallet is locked, the amount comes from the agreed price, a second check approves it, and it can only be paid once. If anything doesn't match, it freezes instead of sending. Banks fix mistakes after the fact; Scalehouse stops them before they happen.",
+      ],
+      [
+        "Why not just send USDC from my wallet?",
+        "You can, and for paying a friend once that's fine. But a wallet send has no record of what it was for, can be sent twice, and can be sent to a wrong or fake address. The moment staff or an AI agent pays for you, that's a real risk. Scalehouse is just as fast (about 30 seconds) but every payment is checked, explained and impossible to send twice.",
+      ],
+      [
+        "Is my money safe? Who holds it?",
+        "You do. Your USDC stays in your own wallet until the moment you pay someone, then it goes straight from you to them. Scalehouse never holds funds, and you set a daily budget so nothing can go out beyond it. We will never ask for your recovery phrase.",
+      ],
+      [
+        "Is anyone actually using it?",
+        <>
+          Yes, real people are paid with real USDC on Arc mainnet, each in under 30 seconds. Every number is public and read straight from the chain on the{" "}
+          <Link className="link" href="/traction">
+            traction page
+          </Link>
+          , and every payment has a receipt anyone can open.
+        </>,
+      ],
+      [
+        "What if I make a mistake or something looks wrong?",
+        "A payment that doesn't match what was recorded (wrong wallet, wrong amount, a short delivery or a reused invoice) freezes in public instead of going through, and you can review it on your house page. For bigger payments you can add a confirmer who has to tap Confirm first, and you can pause all payments at any time. Before you tap Pay, double-check the wallet address: once a correct payment is sent, like any USDC transfer, it can't be pulled back.",
+      ],
+      ["What does it cost?", "About a cent in network fees per transaction on Arc. Scalehouse itself charges nothing today."],
+      [
+        "Can I try it without real money?",
+        <>
+          Yes. Open the{" "}
+          <a className="link" href="https://scalehouse-testnet.vercel.app">
+            testnet version
+          </a>
+          , tap &ldquo;Get test USDC&rdquo; for free play money, and do everything exactly as you would for real.
+        </>,
+      ],
+    ],
+  },
+  {
     title: "The basics",
     items: [
-      ["What is Scalehouse?", "A way for small businesses to pay people for goods delivered or work done, where the person who counts is never the only one deciding the payment. A clerk records it, a witness confirms it, an AI agent decides when to pay, and a contract on Arc makes sure the amount and the wallet are right."],
+      ["What is Scalehouse?", "A way for businesses, builders and AI agents to pay anyone in USDC in about 30 seconds from one wallet, where every payment is checked before it moves. You record who you're paying and what for, a second check approves it (automatically for small amounts), an AI agent screens the wallet and pays, and a contract on Arc makes sure the amount and the wallet are right."],
       ["Who is it for?", "Shops paying suppliers, teams paying freelancers, projects paying bounties, and buying floors paying farmers and haulers. Anyone who pays for something that is counted, weighed or checked."],
       ["Why is it called Scalehouse?", "A scalehouse was the public building where goods were weighed in front of everyone before anyone was paid. We do the same with money: everything is weighed in public, and every ticket is paid once."],
     ],
@@ -28,11 +70,10 @@ const GROUPS: { title: string; items: [string, React.ReactNode][] }[] = [
   {
     title: "Using it",
     items: [
-      ["What do I need to start?", `A browser wallet on ${chain.name} (MetaMask, OKX Wallet or Rabby) with some USDC. Opening a house takes three confirmations and costs a few cents in network fees.`],
+      ["What do I need to start?", `A browser wallet on ${chain.name} (MetaMask, OKX Wallet or Rabby) with a little USDC. Opening a house takes two questions and one approval, and costs about a cent.`],
       ["Do the people I pay need anything?", `Only a wallet address on ${chain.name}. They don't need to sign anything or hold any gas.`],
-      ["Do witnesses pay fees?", "No. Witnesses sign a message for free and Scalehouse submits it."],
+      ["Do confirmers need a wallet or pay fees?", "No. A confirmer gets a private link and taps Confirm. Scalehouse gives them a Circle wallet behind the scenes and submits the confirmation for free."],
       ["Can I pay in euros?", "Yes. A house can pay in EURC instead of USDC."],
-      ["What does it cost?", "Network fees of about a cent per transaction. Scalehouse itself charges nothing today."],
     ],
   },
   {
