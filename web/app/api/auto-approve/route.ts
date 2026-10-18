@@ -43,12 +43,13 @@ export async function POST(req: Request) {
   }
 
   if (body.action === "prepare") {
-    // Only for the very next house id, and at most one checker per house.
+    // An existing house or the very next one; at most one checker per house (idempotent).
     const next = (await publicClient.readContract({ address: scaleTicketAddress, abi: scaleTicketAbi, functionName: "houseCount" })) + 1n;
-    if (BigInt(body.houseId ?? 0) !== next) return bad("Only the next house can be prepared", 409);
+    const id = BigInt(body.houseId ?? 0);
+    if (id < 1n || id > next) return bad("Unknown house", 404);
     try {
-      const checker = await checkerOf(Number(next), true);
-      return NextResponse.json({ houseId: next.toString(), checker: checker!.address });
+      const checker = await checkerOf(Number(id), true);
+      return NextResponse.json({ houseId: id.toString(), checker: checker!.address });
     } catch (e) {
       return bad((e as Error).message.split("\n")[0], 500);
     }
