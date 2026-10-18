@@ -14,6 +14,8 @@ import { housePosition, readHouse } from "@/lib/chain";
 import { sql } from "@/lib/db";
 import { grossOf, money, qty, short, timeAgo } from "@/lib/format";
 import { freezeReasons, houseName, houseRates, houseTeam, houseTickets, labels } from "@/lib/house";
+import { CHECKER_NAME } from "@/lib/autoapprove";
+import { confirmersOf } from "@/lib/confirmers";
 import { syncIfStale } from "@/lib/indexer";
 import { CHAIN_ID, agentAddress, explorerAddress, explorerTx, tokenSymbol } from "@/lib/network";
 import { REASON_TEXT } from "@/lib/types";
@@ -36,7 +38,7 @@ export default async function HousePage({ params, searchParams }: { params: Prom
   const house = await readHouse(id);
   if (!house) notFound();
 
-  const [name, position, tickets, rates, team, names, frozen, runsRes, briefRes] = await Promise.all([
+  const [name, position, tickets, rates, team, names, frozen, runsRes, briefRes, linkConfirmers] = await Promise.all([
     houseName(id),
     housePosition(house),
     houseTickets(id),
@@ -46,7 +48,10 @@ export default async function HousePage({ params, searchParams }: { params: Prom
     freezeReasons(id),
     sql()`select id, trigger, summary, transcript, started_at from sh_agent_runs where chain_id = ${CHAIN_ID} and house_id = ${id} and trigger <> 'brief' order by started_at desc limit 5`.catch(() => []),
     sql()`select summary, finished_at from sh_agent_runs where chain_id = ${CHAIN_ID} and house_id = ${id} and trigger = 'brief' order by started_at desc limit 1`.catch(() => []),
+    confirmersOf(id).catch(() => []),
   ]);
+  // Plain-language names for the wallets Scalehouse created for this house.
+  const known = new Map(linkConfirmers.map((c) => [c.address.toLowerCase(), c.name === CHECKER_NAME ? "Auto-approve checker" : `${c.name} (confirms by link)`]));
   const runs = runsRes as RunRow[];
   const brief = (briefRes as { summary: string; finished_at: string }[])[0] ?? null;
   const symbol = tokenSymbol(house.token);
@@ -166,8 +171,13 @@ export default async function HousePage({ params, searchParams }: { params: Prom
               {team.length === 0 && <p className="px-4 py-3 text-muted">No clerks or witnesses yet.</p>}
               {team.map((m) => (
                 <div key={m.address} className="flex justify-between gap-2 px-4 py-3">
-                  <span className="truncate">{label(m.address)}</span>
-                  <span className="text-muted">{[m.roles & 1 ? "clerk" : null, m.roles & 2 ? "witness" : null].filter(Boolean).join(" + ")}</span>
+                  <span className="truncate">
+                    {m.address.toLowerCase() === house.owner.toLowerCase() ? "You (owner)" : known.get(m.address.toLowerCase()) ?? label(m.address)}
+                    <span className="ml-2 figure text-xs text-faint">{short(m.address)}</span>
+                  </span>
+                  <span className="shrink-0 text-muted">
+                    {[m.roles & 1 ? "records payments" : null, m.roles & 2 ? (known.get(m.address.toLowerCase()) === "Auto-approve checker" ? "approves small payments" : "confirms") : null].filter(Boolean).join(" + ")}
+                  </span>
                 </div>
               ))}
             </div>
